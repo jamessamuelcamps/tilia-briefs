@@ -1,0 +1,20 @@
+{
+  "personal": {
+    "owner": "Personal",
+    "label": "your LinkedIn",
+    "briefDay": "Monday",
+    "postTime": "08:45",
+    "minWords": 250,
+    "maxWords": 350,
+    "research": true
+  },
+  "tilia": {
+    "owner": "Tilia",
+    "label": "the Tilia page",
+    "briefDay": "Wednesday",
+    "postTime": "13:45",
+    "minWords": 120,
+    "maxWords": 180,
+    "research": false
+  }
+}

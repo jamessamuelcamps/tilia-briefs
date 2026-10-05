@@ -1,0 +1,17 @@
+{
+  "name": "tilia-briefs",
+  "private": true,
+  "type": "module",
+  "description": "Weekly interview-style writing briefs, delivered to Slack with a Notion draft page.",
+  "engines": {
+    "node": ">=22.9"
+  },
+  "scripts": {
+    "setup:notion": "node --env-file-if-exists=.env scripts/setup-notion.mjs",
+    "brief:personal": "node --env-file-if-exists=.env scripts/run.mjs personal",
+    "brief:tilia": "node --env-file-if-exists=.env scripts/run.mjs tilia",
+    "dry:personal": "node --env-file-if-exists=.env scripts/run.mjs personal --dry-run",
+    "dry:tilia": "node --env-file-if-exists=.env scripts/run.mjs tilia --dry-run",
+    "test": "node --test"
+  }
+}
