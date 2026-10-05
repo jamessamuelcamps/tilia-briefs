@@ -2,7 +2,8 @@
   "personal": {
     "owner": "Personal",
     "label": "your LinkedIn",
-    "briefDay": "Monday",
+    "briefDay": "Sunday",
+    "daysAhead": 2,
     "postTime": "08:45",
     "minWords": 250,
     "maxWords": 350,
@@ -11,7 +12,8 @@
   "tilia": {
     "owner": "Tilia",
     "label": "the Tilia page",
-    "briefDay": "Wednesday",
+    "briefDay": "Tuesday",
+    "daysAhead": 2,
     "postTime": "13:45",
     "minWords": 120,
     "maxWords": 180,

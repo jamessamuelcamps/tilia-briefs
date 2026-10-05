@@ -1,16 +1,16 @@
 # Tilia briefs
 
-Twice a week, at 18:00 the evening before a post, a Slack message arrives with an interview-style writing brief. The same brief is added to that topic's page in Notion, with space under each question to write.
+Twice a week, at 18:00 two days before a post, a Slack message arrives with an interview-style writing brief. The same brief is added to that topic's page in Notion, with space under each question to write.
 
 | Brief arrives | For | Length | Topics from |
 | --- | --- | --- | --- |
-| Monday 18:00 | Tuesday 08:45 post on your LinkedIn | 250–350 words | Your list, plus up to 3 researched ideas a week |
-| Wednesday 18:00 | Thursday 13:45 post on the Tilia page | 120–180 words | Tilia feature list |
+| Sunday 18:00 | Tuesday 08:45 post on your LinkedIn | 250–350 words | Your list, plus up to 3 researched ideas a week |
+| Tuesday 18:00 | Thursday 13:45 post on the Tilia page | 120–180 words | Tilia feature list |
 
 ## How it works
 
 1. A GitHub Action runs on schedule ([.github/workflows/briefs.yml](.github/workflows/briefs.yml)).
-2. On Mondays, Claude searches the web for current product, UX and research debates and adds up to 3 ideas to Notion, each with a real source link.
+2. On Sundays, Claude searches the web for current product, UX and research debates and adds up to 3 ideas to Notion, each with a real source link.
 3. Claude picks one idea with status **Idea** and writes a brief: an angle to react to, then 3–5 sections of questions with word targets.
 4. The brief is appended to that idea's Notion page, its status becomes **Briefed**, and the brief is posted to Slack with a link.
 5. You write in Notion, post on LinkedIn, then set the status to **Posted** (or **Dropped**).

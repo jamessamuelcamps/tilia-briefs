@@ -76,6 +76,7 @@ test('Slack text escapes control characters and links to Notion', () => {
     postDayLabel: 'Tuesday 6 October',
     notionUrl: 'https://notion.so/page',
   });
+  assert.match(text, /^\*About \d+ words for .+\*, posting Tuesday 6 October at /);
   assert.match(text, /Research &lt; shipping &amp; that is fine/);
   assert.match(text, /\*Tools &amp; tricks\*/);
   assert.match(text, /<https:\/\/notion\.so\/page\|Start writing in Notion →>/);

@@ -56,7 +56,7 @@ async function research(owner) {
 async function brief(key) {
   const channel = channels[key];
   const owner = channel.owner;
-  const postDate = addDays(londonParts().date, 1);
+  const postDate = addDays(londonParts().date, channel.daysAhead);
   const postDayLabel = formatDay(postDate);
 
   if (!dryRun && !force) {

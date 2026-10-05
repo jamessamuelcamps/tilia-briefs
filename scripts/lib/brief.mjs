@@ -49,7 +49,7 @@ export function validateResearch(data, { existingTitles, maxIdeas }) {
 /** The Slack message: readable in full from the notification. */
 export function toSlackText(brief, { idea, channel, postDayLabel, notionUrl }) {
   const lines = [
-    `*Tomorrow: about ${brief.totalWords} words for ${channel.label}*, posting ${postDayLabel} at ${channel.postTime}`,
+    `*About ${brief.totalWords} words for ${channel.label}*, posting ${postDayLabel} at ${channel.postTime}`,
     '',
     `*${escapeSlack(idea.title)}*`,
     `_${escapeSlack(brief.intro)}_`,
