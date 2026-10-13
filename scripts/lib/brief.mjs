@@ -1,9 +1,9 @@
 import { escapeSlack } from './slack.mjs';
 
-const isText = (v) => typeof v === 'string' && v.trim().length > 0;
-const wordCount = (v) => v.trim().split(/\s+/).length;
+export const isText = (v) => typeof v === 'string' && v.trim().length > 0;
+export const wordCount = (v) => v.trim().split(/\s+/).length;
 
-function assert(condition, message) {
+export function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
@@ -68,7 +68,7 @@ export function toSlackText(brief, { idea, channel, postDayLabel, notionUrl }) {
   return lines.join('\n');
 }
 
-const rich = (content, annotations = {}) => [{ type: 'text', text: { content }, annotations }];
+export const rich = (content, annotations = {}) => [{ type: 'text', text: { content }, annotations }];
 const emptyParagraph = () => ({ object: 'block', type: 'paragraph', paragraph: { rich_text: [] } });
 
 /** Blocks appended to the idea's Notion page: the brief, then a space to write under each question. */

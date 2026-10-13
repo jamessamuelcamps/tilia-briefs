@@ -7,7 +7,15 @@
     "postTime": "08:45",
     "minWords": 250,
     "maxWords": 350,
-    "research": true
+    "research": true,
+    "cutMinWords": 150,
+    "cutMaxWords": 200,
+    "site": {
+      "repo": "jamessamuelcamps/portfolio",
+      "branch": "main",
+      "dir": "src/content/writing",
+      "url": "https://james-sc.co.uk/writing"
+    }
   },
   "tilia": {
     "owner": "Tilia",

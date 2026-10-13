@@ -3,7 +3,9 @@ import { requireEnv } from './env.mjs';
 const API = 'https://api.notion.com/v1';
 const VERSION = '2022-06-28';
 
-export const STATUSES = ['Idea', 'Briefed', 'Posted', 'Dropped'];
+// In the order a post moves through them. You set Drafted, Ready and Posted; the scripts set the rest.
+export const STATUSES = ['Idea', 'Briefed', 'Drafted', 'Reviewed', 'Ready', 'Published', 'Posted', 'Dropped'];
+export const BRIEFED_ONWARDS = STATUSES.filter((s) => s !== 'Idea' && s !== 'Dropped');
 export const SOURCES = ['Spreadsheet', 'Research', 'Manual'];
 export const OWNERS = ['Personal', 'Tilia'];
 
@@ -59,12 +61,26 @@ function toIdea(page) {
   };
 }
 
-/** All ideas for an owner, optionally limited to some statuses. */
+/** Adds any statuses the database doesn't have yet, keeping the existing options. Returns the ones added. */
+export async function ensureStatuses() {
+  const databaseId = requireEnv('NOTION_DATABASE_ID');
+  const existing = (await call(`/databases/${databaseId}`)).properties.Status.select.options;
+  const missing = STATUSES.filter((name) => !existing.some((o) => o.name === name));
+  if (!missing.length) return missing;
+  const options = [
+    ...STATUSES.map((name) => existing.find((o) => o.name === name) ?? { name }),
+    ...existing.filter((o) => !STATUSES.includes(o.name)),
+  ];
+  await call(`/databases/${databaseId}`, { method: 'PATCH', body: { properties: { Status: { select: { options } } } } });
+  return missing;
+}
+
+/** Ideas with one of the given statuses, for one owner or (with owner null) for everyone. */
 export async function queryIdeas(owner, statuses = STATUSES) {
   const databaseId = requireEnv('NOTION_DATABASE_ID');
   const filter = {
     and: [
-      { property: 'Owner', select: { equals: owner } },
+      ...(owner ? [{ property: 'Owner', select: { equals: owner } }] : []),
       { or: statuses.map((s) => ({ property: 'Status', select: { equals: s } })) },
     ],
   };
@@ -108,4 +124,29 @@ export async function markBriefed(pageId, postDate) {
 
 export async function appendBlocks(pageId, children) {
   return call(`/blocks/${pageId}/children`, { method: 'PATCH', body: { children } });
+}
+
+export async function getIdea(pageId) {
+  return toIdea(await call(`/pages/${pageId}`));
+}
+
+export async function setStatus(pageId, status) {
+  return call(`/pages/${pageId}`, { method: 'PATCH', body: { properties: { Status: { select: { name: status } } } } });
+}
+
+/** Every top-level block on a page, in order. */
+export async function listBlocks(pageId) {
+  const blocks = [];
+  let cursor;
+  do {
+    const res = await call(`/blocks/${pageId}/children?page_size=100${cursor ? `&start_cursor=${cursor}` : ''}`);
+    blocks.push(...res.results);
+    cursor = res.has_more ? res.next_cursor : undefined;
+  } while (cursor);
+  return blocks;
+}
+
+/** Comments on a page ({ page_id }) or on one block ({ block_id }). The integration needs the "Insert comments" capability. */
+export async function addComment(parent, content) {
+  return call('/comments', { method: 'POST', body: { parent, rich_text: text(content) } });
 }

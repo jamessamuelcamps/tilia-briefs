@@ -12,6 +12,8 @@
     "brief:tilia": "node --env-file-if-exists=.env scripts/run.mjs tilia",
     "dry:personal": "node --env-file-if-exists=.env scripts/run.mjs personal --dry-run",
     "dry:tilia": "node --env-file-if-exists=.env scripts/run.mjs tilia --dry-run",
+    "watch": "node --env-file-if-exists=.env scripts/watch.mjs",
+    "dry:watch": "node --env-file-if-exists=.env scripts/watch.mjs --dry-run",
     "test": "node --test"
   }
 }

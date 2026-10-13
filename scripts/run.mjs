@@ -1,11 +1,11 @@
 // Usage:
 //   node scripts/run.mjs personal|tilia [--dry-run] [--force]
 //   node scripts/run.mjs --scheduled   (GitHub Actions; works out the channel from the day and UK time)
-import { readFile } from 'node:fs/promises';
 import { askClaudeJson } from './lib/claude.mjs';
 import { addDays, formatDay, londonOffsetHours, londonParts } from './lib/dates.mjs';
-import { appendBlocks, createIdea, markBriefed, queryIdeas } from './lib/notion.mjs';
+import { appendBlocks, createIdea, markBriefed, queryIdeas, BRIEFED_ONWARDS } from './lib/notion.mjs';
 import { postToSlack } from './lib/slack.mjs';
+import { fill, read } from './lib/template.mjs';
 import { toNotionBlocks, toSlackText, validateBrief, validateResearch } from './lib/brief.mjs';
 
 const BRIEF_HOUR_UK = 18;
@@ -19,8 +19,6 @@ const CHANNEL_RULES = {
     "This is the Tilia business page, introducing one feature. Interview James about: the problem it solves, who it's for, how it works in Tilia, and one concrete example of it in use. Keep it short and specific. Don't describe the feature yourself; ask him.",
 };
 
-const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const fill = (template, values) => template.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? '');
 const bullets = (items) => (items.length ? items.map((i) => `- ${i}`).join('\n') : '- (none)');
 
 const args = process.argv.slice(2);
@@ -60,7 +58,7 @@ async function brief(key) {
   const postDayLabel = formatDay(postDate);
 
   if (!dryRun && !force) {
-    const alreadyBriefed = (await queryIdeas(owner, ['Briefed'])).some((i) => i.postDate === postDate);
+    const alreadyBriefed = (await queryIdeas(owner, BRIEFED_ONWARDS)).some((i) => i.postDate === postDate);
     if (alreadyBriefed) return console.log(`Already briefed ${owner} for ${postDate}; skipping.`);
   }
 
@@ -77,7 +75,7 @@ async function brief(key) {
     return;
   }
 
-  const recent = (await queryIdeas(owner, ['Briefed', 'Posted']))
+  const recent = (await queryIdeas(owner, BRIEFED_ONWARDS))
     .sort((a, b) => (b.postDate ?? '').localeCompare(a.postDate ?? ''))
     .slice(0, 6)
     .map((i) => i.title);
