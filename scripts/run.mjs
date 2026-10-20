@@ -14,7 +14,7 @@ const MAX_CANDIDATES = 40;
 
 const CHANNEL_RULES = {
   personal:
-    "This is James's personal profile, written as himself. Mention Tilia at most once, and only if the topic is directly about research tooling.",
+    "This is James's personal profile, written as himself. The goal is to establish him as a thought leader in product and UX design: interview him towards a distinctive, arguable position that peers will remember him for. Most of these posts won't mention Tilia. If building it gives him a genuinely relevant example, a question can invite it, but never steer the post towards promoting it.",
   tilia:
     "This is the Tilia business page, introducing one feature. Interview James about: the problem it solves, who it's for, how it works in Tilia, and one concrete example of it in use. Keep it short and specific. Don't describe the feature yourself; ask him.",
 };

@@ -32,6 +32,13 @@ const POST_TYPES = {
   tilia: "A short product or feature post for the Tilia business page on LinkedIn. It isn't published anywhere else.",
 };
 
+const POST_GOALS = {
+  personal:
+    "This post's job is to build James's standing as a voice worth following in product and UX design: a clear, arguable point of view, backed by his own experience, that peers remember and share. A bigger audience for James grows Tilia's audience by default, so the post isn't an advert. A mention of Tilia is fine where it genuinely belongs, but don't suggest adding one or making the post more promotional.",
+  tilia:
+    "This post's job is to promote Tilia, a SaaS product, by making one feature and its value clear to the people it's for. Bring an eye for product marketing.",
+};
+
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
 const flagValue = (flag) => (args.includes(flag) ? args[args.indexOf(flag) + 1] : null);
@@ -48,6 +55,7 @@ async function review(idea) {
   const paragraphs = extractPost(await listBlocks(idea.id));
   const prompt = fill(await read('prompts/subedit.md'), {
     postType: POST_TYPES[channel.key],
+    postGoal: POST_GOALS[channel.key],
     voiceGuide: await read('config/voice-guide.md'),
     tiliaContext: await read('config/tilia.md'),
     title: idea.title,

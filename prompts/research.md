@@ -11,6 +11,7 @@ Start with these sources, then look wider if useful:
 ## A good idea
 
 - Invites an opinion from a working designer or researcher, not a summary of news.
+- Lets James stake out a distinctive position that builds his reputation in the industry. These posts are thought leadership, not promotion for Tilia.
 - Is something James could answer from his own experience.
 - Isn't a near-duplicate of anything already on his list (below).
 - Has a real source URL that you actually opened. Never guess or construct a URL. If you can't find a real source, return fewer ideas.
