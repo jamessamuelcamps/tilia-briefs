@@ -14,7 +14,7 @@ Twice a week, at 18:00 two days before a post, a Slack message arrives with an i
 3. Claude picks one idea with status **Idea** and writes a brief: an angle to react to, then 3–5 sections of questions with word targets.
 4. The brief is appended to that idea's Notion page, its status becomes **Briefed**, and the brief is posted to Slack with a link.
 5. You write the post under **Finished post** on that page, then set the status to **Drafted**.
-6. A second Action checks Notion every few minutes ([.github/workflows/watch.yml](.github/workflows/watch.yml)). For a Drafted page, Claude sub-edits the post: one overall comment on the page and comments on individual paragraphs. It never edits your text. The status becomes **Reviewed** and Slack tells you.
+6. A second Action checks Notion every 30 minutes from Sunday evening to Thursday evening, the two days after each brief ([.github/workflows/watch.yml](.github/workflows/watch.yml)). For a Drafted page, Claude sub-edits the post: one overall comment on the page and comments on individual paragraphs. It never edits your text. The status becomes **Reviewed** and Slack tells you.
 7. You act on the comments you agree with. For a Tilia post, schedule it on LinkedIn and set the status to **Posted**. For a personal post, set it to **Ready**.
 8. For a Ready page, the post is committed to the portfolio repo, which deploys the site. Once it's live, a **LinkedIn cut** is added under the post in Notion with a link to the full post, the status becomes **Published** and Slack tells you.
 9. You schedule the cut on LinkedIn and set the status to **Posted** (or **Dropped** at any point).
@@ -29,7 +29,7 @@ Twice a week, at 18:00 two days before a post, a Slack message arrives with an i
 | Published | Script | Live on the site, LinkedIn cut written |
 | Posted | You | Scheduled on LinkedIn; done |
 
-Expect 5 to 15 minutes between changing a status and something happening: GitHub runs scheduled jobs late when it's busy. If a step fails, Slack says why and the status goes back to the one before, so setting it again retries.
+Expect up to 30 minutes between changing a status and something happening, often more: GitHub runs scheduled jobs late, and sometimes hours late, when it's busy. On Friday and Saturday the watcher doesn't run. To skip the wait, go to Actions → Watch Notion → Run workflow, or run `gh workflow run watch.yml`. If a step fails, Slack says why and the status goes back to the one before, so setting it again retries.
 
 The LinkedIn cut is a teaser of 150 to 200 words made only by removing text from your post. The script checks every word against the post and saves your original characters, so a cut with rewritten text is rejected. The site description and tags (three at most) are the only words Claude writes; edit them in the portfolio repo if you want to.
 
@@ -77,5 +77,5 @@ Local runs use your normal `claude` login.
 - [config/voice-guide.md](config/voice-guide.md): how posts should sound.
 - [config/tilia.md](config/tilia.md): what briefs know about Tilia. Update it when you ship.
 - [config/sources.md](config/sources.md): where research looks first.
-- [config/channels.json](config/channels.json): days, times and word ranges, plus the LinkedIn cut length and site repo for personal posts. If you change a brief day, update the cron days in the workflow too.
+- [config/channels.json](config/channels.json): days, times and word ranges, plus the LinkedIn cut length and site repo for personal posts. If you change a brief day, update the cron days in both workflows too.
 - [prompts/](prompts/): the brief, research, sub-edit and LinkedIn cut prompts.
