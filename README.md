@@ -4,8 +4,8 @@ Twice a week, at 18:00 two days before a post, an interview-style writing brief 
 
 | Brief arrives | For | Length | Topics from |
 | --- | --- | --- | --- |
-| Sunday 18:00 | Tuesday 08:45 article on your site, cut down for your LinkedIn | 250–350 words | Personal ideas with no Format or **Article**, plus up to 3 researched ideas a week |
-| Tuesday 18:00 | Thursday 08:45 short post on your LinkedIn only | 120–200 words | Personal ideas with no Format or **Short post** |
+| Sunday 18:00 | Tuesday 16:00 article on your site, cut down for your LinkedIn | 250–350 words | Personal ideas with no Format or **Article**, plus up to 3 researched ideas a week |
+| Tuesday 18:00 | Thursday 17:00 short post on your LinkedIn only | 120–200 words | Personal ideas with no Format or **Short post** |
 | First Sunday of the month, 18:00 | A free tool or template kit to build within two weeks | 150–300 words of answers | Personal ideas with Format **Make** |
 
 A Make brief scopes the build: who it's for, the smallest useful version, where it lives. Your answers are the spec. Set it to Drafted when you've answered, and you'll be reminded to open Claude Code in the portfolio or templates repo and build from the page. There's no sub-edit for a Make page; set it to Posted once it's live.

@@ -5,7 +5,7 @@
     "label": "your site and LinkedIn",
     "briefDay": "Sunday",
     "daysAhead": 2,
-    "postTime": "08:45",
+    "postTime": "16:00",
     "minWords": 250,
     "maxWords": 350,
     "research": true,
@@ -24,7 +24,7 @@
     "label": "your LinkedIn",
     "briefDay": "Tuesday",
     "daysAhead": 2,
-    "postTime": "08:45",
+    "postTime": "17:00",
     "minWords": 120,
     "maxWords": 200,
     "research": false
