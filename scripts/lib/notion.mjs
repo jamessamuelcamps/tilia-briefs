@@ -174,6 +174,38 @@ export async function listComments(pageId) {
   return comments;
 }
 
+/** A row in the Tilia GTM database as a plain object. Every property except the title is optional. */
+export function toGtmItem(page) {
+  const p = page.properties;
+  return {
+    id: page.id,
+    url: page.url,
+    title: plainText(p.Name?.title),
+    type: p.Type?.select?.name ?? null,
+    status: p.Status?.select?.name ?? null,
+    channel: p.Channel?.select?.name ?? null,
+  };
+}
+
+/** Rows in the Tilia GTM database (NOTION_GTM_DATABASE_ID) with this Type and Status. */
+export async function queryGtm({ type, status }) {
+  const databaseId = requireEnv('NOTION_GTM_DATABASE_ID');
+  const filter = {
+    and: [
+      { property: 'Type', select: { equals: type } },
+      { property: 'Status', select: { equals: status } },
+    ],
+  };
+  const items = [];
+  let cursor;
+  do {
+    const res = await call(`/databases/${databaseId}/query`, { method: 'POST', body: { filter, page_size: 100, start_cursor: cursor } });
+    items.push(...res.results.map(toGtmItem));
+    cursor = res.has_more ? res.next_cursor : undefined;
+  } while (cursor);
+  return items;
+}
+
 /** The page the database sits under ("Tilia Briefs"), where crash alerts go. */
 export async function hubPageId() {
   const database = await call(`/databases/${requireEnv('NOTION_DATABASE_ID')}`);

@@ -21,6 +21,9 @@ jobs:
       NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
       NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
       NOTION_USER_ID: ${{ secrets.NOTION_USER_ID }}
+      NOTION_GTM_DATABASE_ID: ${{ secrets.NOTION_GTM_DATABASE_ID }}
+      BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+      BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       PORTFOLIO_TOKEN: ${{ secrets.PORTFOLIO_TOKEN }}
     steps:
@@ -28,7 +31,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Look for Drafted or Ready pages
+      - name: Queue approved Tilia posts, look for Drafted or Ready pages
         id: check
         run: node scripts/watch.mjs --check
       # Most runs find nothing and stop here.

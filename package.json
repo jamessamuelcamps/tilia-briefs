@@ -15,6 +15,7 @@
     "test": "node --test",
     "brief:short": "node --env-file-if-exists=.env scripts/run.mjs personal-short",
     "dry:short": "node --env-file-if-exists=.env scripts/run.mjs personal-short --dry-run",
-    "dry:make": "node --env-file-if-exists=.env scripts/run.mjs make --dry-run"
+    "dry:make": "node --env-file-if-exists=.env scripts/run.mjs make --dry-run",
+    "buffer:channels": "node --env-file-if-exists=.env scripts/buffer-channels.mjs"
   }
 }

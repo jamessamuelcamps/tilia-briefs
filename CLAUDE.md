@@ -9,5 +9,6 @@ Interview-style briefs for James's personal work: a Sunday article (site plus Li
 - Notifications go through `notify()` in `scripts/lib/notify.mjs`: a Notion comment @mentioning `NOTION_USER_ID`, plus Slack only if `SLACK_WEBHOOK_URL` is set. James doesn't see Slack channel posts, so don't add Slack-only messages.
 - The repo and its Action logs are public. Don't log draft text in CI.
 - Secrets live in `.env` locally and GitHub secrets in CI. Never commit them.
-- Tilia posts are no longer briefed here (the `tilia` channel has no brief day; it only finishes pages already in flight). Tilia GTM is planned as a separate, approval-gated system.
+- Tilia posts are no longer briefed here (the `tilia` channel has no brief day; it only finishes pages already in flight). Tilia GTM is separate: Claude routines draft rows in the Notion "Tilia GTM" database (prompts in `routines/`), and the only code here is `scripts/lib/gtm.mjs`, which queues Approved LinkedIn posts in Buffer.
+- Tilia GTM copy may be written by Claude, unlike personal posts, but nothing is posted or sent without James approving it. Outreach is always sent by James himself. Prospect names and contact details live only in Notion, never in this public repo or its logs.
 - Run `npm test` and a dry run (`npm run dry:personal`, `dry:short`, `dry:make`, or `npm run dry:watch -- --review <pageId>` / `--publish <pageId>`) after changing prompts or validation.

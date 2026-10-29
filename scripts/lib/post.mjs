@@ -36,25 +36,41 @@ function toMarkdown(richText) {
 
 export const hasCut = (blocks) => blocks.some((b) => isHeading(b, CUT_HEADING));
 
-/** The paragraphs James wrote under "Finished post", each with its Notion block id so comments can attach to it. */
-export function extractPost(blocks) {
-  const start = blocks.findIndex((b) => isHeading(b, POST_HEADING));
-  assert(start !== -1, `There's no "${POST_HEADING}" heading on the page`);
+/**
+ * The paragraphs under a heading ("Finished post" by default), each with its Notion block id so comments can
+ * attach to it. Stops at a divider or the LinkedIn cut.
+ */
+export function extractPost(blocks, heading = POST_HEADING) {
+  const start = blocks.findIndex((b) => isHeading(b, heading));
+  assert(start !== -1, `There's no "${heading}" heading on the page`);
 
   const paragraphs = [];
   for (const block of blocks.slice(start + 1)) {
     if (block.type === 'divider' || isHeading(block, CUT_HEADING)) break;
     const prefix = MARKDOWN_PREFIX[block.type];
-    assert(prefix !== undefined, `The finished post has a "${block.type}" block, which can't be published yet; use text, headings, lists or quotes`);
+    assert(prefix !== undefined, `The text under "${heading}" has a "${block.type}" block, which can't be published yet; use text, headings, lists or quotes`);
     const richText = block[block.type].rich_text;
     const text = plain(richText).trim();
     if (text) paragraphs.push({ id: block.id, type: block.type, text, markdown: prefix + toMarkdown(richText).trim() });
   }
-  assert(paragraphs.length, `Nothing is written under "${POST_HEADING}" yet`);
+  assert(paragraphs.length, `Nothing is written under "${heading}" yet`);
   return paragraphs;
 }
 
 export const postText = (paragraphs) => paragraphs.map((p) => p.text).join('\n\n');
+
+/** Plain text for LinkedIn, which has no Markdown: bullets become "•", and list items sit on consecutive lines. */
+export function linkedInText(paragraphs) {
+  let number = 0;
+  return paragraphs
+    .map((p, i) => {
+      const sameList = i > 0 && isListItem(p.type) && p.type === paragraphs[i - 1].type;
+      number = p.type === 'numbered_list_item' ? (sameList ? number + 1 : 1) : 0;
+      const line = p.type === 'bulleted_list_item' ? `• ${p.text}` : p.type === 'numbered_list_item' ? `${number}. ${p.text}` : p.text;
+      return (sameList ? '\n' : i ? '\n\n' : '') + line;
+    })
+    .join('');
+}
 
 export function postMarkdown(paragraphs) {
   return paragraphs

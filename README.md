@@ -42,6 +42,32 @@ The LinkedIn cut is a teaser of 150 to 200 words made only by removing text from
 
 Claude runs through Claude Code with your Pro subscription, not the API. Usage is shared with your normal Claude usage; a brief is a couple of prompts, a sub-edit or a publish is one each.
 
+## Tilia GTM
+
+Tilia go-to-market work is drafted by Claude, not briefed, and nothing goes out without you. It lives in the **Tilia GTM** database in Notion, under Tilia Briefs.
+
+- **Every Monday at 07:00 UK** a Claude routine ([routines/tilia-weekly-gtm.md](routines/tilia-weekly-gtm.md)) reads the Tilia and templates repos and searches the web. It then adds, each at **Needs approval**:
+  - 3 LinkedIn posts for the Tilia page
+  - about 10 outreach messages to people who have publicly shown the need
+  - 3 to 5 partnership or community openings
+  - directory listings, until they're done
+  - a weekly digest that @mentions you
+- **On the 2nd of each month** a second routine ([routines/tilia-monthly-seo.md](routines/tilia-monthly-seo.md)) opens two pull requests for you to review: a search page on tilialabs.io and a new public template. It also drafts a LinkedIn post about the template.
+- **What you do:**
+  - **LinkedIn posts:** edit the text under **Draft** if you like, then set the status to **Approved**. Within 30 minutes the watcher adds it to the end of the Tilia page's Buffer queue and sets it to **Scheduled**.
+  - **Outreach and community rows:** send them yourself from your own account, then set them to **Sent**. Set anything you don't want to **Rejected**.
+  - **Feedback:** to steer next week, write in **Feedback** or comment on the row; the routine reads both.
+- **Routines run on your Claude plan** and are listed at claude.ai/code/routines. Edit the prompt files here to change what they do.
+
+| GTM status | Set by | Meaning |
+| --- | --- | --- |
+| Needs approval | Claude | Drafted; waiting for you |
+| Approved | You | LinkedIn posts: queue in Buffer |
+| Scheduled | Watcher | In the Buffer queue |
+| Sent | You | You sent the message or posted the reply |
+| Done | You | Finished (a listing that's live, a merged PR) |
+| Rejected | You | Not doing it (say why in Feedback) |
+
 ## Adding ideas
 
 Add a row to the **Content ideas** database in Notion: a name, **Owner** (Personal or Tilia) and **Status** Idea. Notes are optional but help the brief. For personal ideas, leave **Format** empty if the topic could be an article or a short post, set it to pin one, or set **Make** for something to build.
@@ -52,8 +78,9 @@ Add a row to the **Content ideas** database in Notion: a name, **Owner** (Person
 2. **Notion.** Go to notion.so/profile/integrations → New integration (internal) and copy the secret. Under **Capabilities**, tick **Read comments** and **Insert comments**, so the sub-editor can comment and alerts aren't repeated. Create a page (for example "Tilia content"), open its ••• menu → **Connections** and add the integration. Copy the page ID: the 32 characters at the end of the page URL.
 3. **Create the database.** Copy `.env.example` to `.env`, fill in `NOTION_TOKEN` and `NOTION_PARENT_PAGE_ID`, then run `npm run setup:notion`. It creates the database, imports the GTM tracker topics, and prints `NOTION_DATABASE_ID`. Add that to `.env`.
 4. **Claude token.** Run `claude setup-token` and copy the token it prints (valid for a year).
-5. **Portfolio token.** Go to github.com/settings/personal-access-tokens → Generate new token (fine-grained). Give it access to the `portfolio` repository only, with **Contents: Read and write**. This is what publishes posts to the site.
-6. **GitHub secrets.**
+5. **Buffer (for Tilia posts).** Sign up at buffer.com (the free plan is enough) and connect the Tilia LinkedIn page. Create an API key at publish.buffer.com/settings/api, put it in `.env` as `BUFFER_API_KEY`, run `npm run buffer:channels` and copy the Tilia page's id into `BUFFER_CHANNEL_ID`. Also copy the Tilia GTM database id (the 32 characters in its URL) into `NOTION_GTM_DATABASE_ID`. Without these, approved posts stay at Approved for you to schedule by hand.
+6. **Portfolio token.** Go to github.com/settings/personal-access-tokens → Generate new token (fine-grained). Give it access to the `portfolio` repository only, with **Contents: Read and write**. This is what publishes posts to the site.
+7. **GitHub secrets.**
    ```sh
    gh secret set CLAUDE_CODE_OAUTH_TOKEN
    gh secret set NOTION_TOKEN
@@ -61,8 +88,11 @@ Add a row to the **Content ideas** database in Notion: a name, **Owner** (Person
    gh secret set NOTION_USER_ID
    gh secret set SLACK_WEBHOOK_URL   # optional
    gh secret set PORTFOLIO_TOKEN
+   gh secret set NOTION_GTM_DATABASE_ID
+   gh secret set BUFFER_API_KEY
+   gh secret set BUFFER_CHANNEL_ID
    ```
-7. **Test.** Actions → Weekly briefs → Run workflow, with dry run ticked: the brief appears in the log. Run it again unticked to send a real one.
+8. **Test.** Actions → Weekly briefs → Run workflow, with dry run ticked: the brief appears in the log. Run it again unticked to send a real one.
 
 The repo is public, so Action logs are too. GitHub also pauses scheduled workflows in a public repo after 60 days without a commit; it emails first, and one click turns them back on.
 
