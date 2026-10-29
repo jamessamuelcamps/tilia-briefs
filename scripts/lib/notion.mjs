@@ -64,6 +64,7 @@ export function toIdea(page) {
     source: p.Source?.select?.name ?? null,
     sourceUrl: p['Source URL']?.url ?? null,
     postDate: p['Post date']?.date?.start?.slice(0, 10) ?? null,
+    format: p.Format?.select?.name ?? null,
   };
 }
 
@@ -121,11 +122,11 @@ export async function createIdea({ title, owner, notes = '', source = 'Manual', 
   return toIdea(page);
 }
 
-export async function markBriefed(pageId, postDate) {
-  return call(`/pages/${pageId}`, {
-    method: 'PATCH',
-    body: { properties: { Status: { select: { name: 'Briefed' } }, 'Post date': { date: { start: postDate } } } },
-  });
+/** Sets the status to Briefed, the post date, and (for Personal channels) the Format the brief was written for. */
+export async function markBriefed(pageId, postDate, format = null) {
+  const properties = { Status: { select: { name: 'Briefed' } }, 'Post date': { date: { start: postDate } } };
+  if (format) properties.Format = { select: { name: format } };
+  return call(`/pages/${pageId}`, { method: 'PATCH', body: { properties } });
 }
 
 export async function appendBlocks(pageId, children) {

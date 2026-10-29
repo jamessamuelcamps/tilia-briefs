@@ -49,7 +49,7 @@ export function validateResearch(data, { existingTitles, maxIdeas }) {
 /** The Slack message: readable in full from the notification. */
 export function toSlackText(brief, { idea, channel, postDayLabel, notionUrl }) {
   const lines = [
-    `*About ${brief.totalWords} words for ${channel.label}*, posting ${postDayLabel} at ${channel.postTime}`,
+    `*${escapeSlack(briefHeadline(brief, { channel, postDayLabel }))}*`,
     '',
     `*${escapeSlack(idea.title)}*`,
     `_${escapeSlack(brief.intro)}_`,
@@ -71,6 +71,12 @@ export function toSlackText(brief, { idea, channel, postDayLabel, notionUrl }) {
 export const rich = (content, annotations = {}) => [{ type: 'text', text: { content }, annotations }];
 const emptyParagraph = () => ({ object: 'block', type: 'paragraph', paragraph: { rich_text: [] } });
 
+/** The first line of a brief, in Notion and in the notification. Make briefs have no post time, only a target date. */
+export function briefHeadline(brief, { channel, postDayLabel }) {
+  if (!channel.postTime) return `About ${brief.totalWords} words of answers. Aim to have it built by ${postDayLabel}.`;
+  return `About ${brief.totalWords} words for ${channel.label}, posting ${postDayLabel} at ${channel.postTime}.`;
+}
+
 /** Blocks appended to the idea's Notion page: the brief, then a space to write under each question. */
 export function toNotionBlocks(brief, { idea, channel, postDayLabel }) {
   const blocks = [
@@ -81,7 +87,7 @@ export function toNotionBlocks(brief, { idea, channel, postDayLabel }) {
       callout: {
         icon: { type: 'emoji', emoji: '🎙️' },
         rich_text: [
-          ...rich(`About ${brief.totalWords} words for ${channel.label}, posting ${postDayLabel} at ${channel.postTime}.\n`, { bold: true }),
+          ...rich(`${briefHeadline(brief, { channel, postDayLabel })}\n`, { bold: true }),
           ...rich(`${brief.intro}\n\n`),
           ...rich('An angle to react to: ', { bold: true }),
           ...rich(brief.angle),
@@ -112,7 +118,7 @@ export function toNotionBlocks(brief, { idea, channel, postDayLabel }) {
 
   blocks.push(
     { object: 'block', type: 'divider', divider: {} },
-    { object: 'block', type: 'heading_2', heading_2: { rich_text: rich('Finished post') } },
+    { object: 'block', type: 'heading_2', heading_2: { rich_text: rich(channel.writeHeading ?? 'Finished post') } },
     emptyParagraph(),
   );
   return blocks;

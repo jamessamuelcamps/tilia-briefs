@@ -44,6 +44,7 @@ test('an idea reads fine when optional columns are missing from the database', (
     source: null,
     sourceUrl: null,
     postDate: null,
+    format: null,
   });
 });
 

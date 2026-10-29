@@ -1,7 +1,8 @@
 {
   "personal": {
     "owner": "Personal",
-    "label": "your LinkedIn",
+    "format": "Article",
+    "label": "your site and LinkedIn",
     "briefDay": "Sunday",
     "daysAhead": 2,
     "postTime": "08:45",
@@ -17,12 +18,34 @@
       "url": "https://james-sc.co.uk/writing"
     }
   },
+  "personal-short": {
+    "owner": "Personal",
+    "format": "Short post",
+    "label": "your LinkedIn",
+    "briefDay": "Tuesday",
+    "daysAhead": 2,
+    "postTime": "08:45",
+    "minWords": 120,
+    "maxWords": 200,
+    "research": false
+  },
+  "make": {
+    "owner": "Personal",
+    "format": "Make",
+    "label": "the product and UX community",
+    "briefDay": "Sunday",
+    "firstWeekOnly": true,
+    "daysAhead": 14,
+    "minWords": 150,
+    "maxWords": 300,
+    "research": false,
+    "prompt": "prompts/brief-make.md",
+    "writeHeading": "Notes for the build",
+    "subedit": false
+  },
   "tilia": {
     "owner": "Tilia",
     "label": "the Tilia page",
-    "briefDay": "Tuesday",
-    "daysAhead": 2,
-    "postTime": "13:45",
     "minWords": 120,
     "maxWords": 180,
     "research": false

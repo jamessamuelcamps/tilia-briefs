@@ -10,7 +10,7 @@ on:
       channel:
         description: Which brief to send now
         type: choice
-        options: [personal, tilia]
+        options: [personal, personal-short, make]
         default: personal
       dry_run:
         description: Print the brief in the log without touching Notion or Slack

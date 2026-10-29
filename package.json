@@ -9,11 +9,12 @@
   "scripts": {
     "setup:notion": "node --env-file-if-exists=.env scripts/setup-notion.mjs",
     "brief:personal": "node --env-file-if-exists=.env scripts/run.mjs personal",
-    "brief:tilia": "node --env-file-if-exists=.env scripts/run.mjs tilia",
     "dry:personal": "node --env-file-if-exists=.env scripts/run.mjs personal --dry-run",
-    "dry:tilia": "node --env-file-if-exists=.env scripts/run.mjs tilia --dry-run",
     "watch": "node --env-file-if-exists=.env scripts/watch.mjs",
     "dry:watch": "node --env-file-if-exists=.env scripts/watch.mjs --dry-run",
-    "test": "node --test"
+    "test": "node --test",
+    "brief:short": "node --env-file-if-exists=.env scripts/run.mjs personal-short",
+    "dry:short": "node --env-file-if-exists=.env scripts/run.mjs personal-short --dry-run",
+    "dry:make": "node --env-file-if-exists=.env scripts/run.mjs make --dry-run"
   }
 }

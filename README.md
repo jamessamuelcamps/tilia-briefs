@@ -4,18 +4,23 @@ Twice a week, at 18:00 two days before a post, an interview-style writing brief 
 
 | Brief arrives | For | Length | Topics from |
 | --- | --- | --- | --- |
-| Sunday 18:00 | Tuesday 08:45 post on your LinkedIn | 250–350 words | Your list, plus up to 3 researched ideas a week |
-| Tuesday 18:00 | Thursday 13:45 post on the Tilia page | 120–180 words | Tilia feature list |
+| Sunday 18:00 | Tuesday 08:45 article on your site, cut down for your LinkedIn | 250–350 words | Personal ideas with no Format or **Article**, plus up to 3 researched ideas a week |
+| Tuesday 18:00 | Thursday 08:45 short post on your LinkedIn only | 120–200 words | Personal ideas with no Format or **Short post** |
+| First Sunday of the month, 18:00 | A free tool or template kit to build within two weeks | 150–300 words of answers | Personal ideas with Format **Make** |
+
+A Make brief scopes the build: who it's for, the smallest useful version, where it lives. Your answers are the spec. Set it to Drafted when you've answered, and you'll be reminded to open Claude Code in the portfolio or templates repo and build from the page. There's no sub-edit for a Make page; set it to Posted once it's live.
+
+Tilia posts are no longer briefed here. Any Tilia page that's already Briefed or Drafted still gets its sub-edit.
 
 ## How it works
 
 1. A GitHub Action runs on schedule ([.github/workflows/briefs.yml](.github/workflows/briefs.yml)).
 2. On Sundays, Claude searches the web for current product, UX and research debates and adds up to 3 ideas to Notion, each with a real source link.
 3. Claude picks one idea with status **Idea** and writes a brief: an angle to react to, then 3–5 sections of questions with word targets.
-4. The brief is appended to that idea's Notion page, its status becomes **Briefed**, and a comment @mentions you.
+4. The brief is appended to that idea's Notion page, its status becomes **Briefed**, its **Format** is set to the kind of brief, and a comment @mentions you.
 5. You write the post under **Finished post** on that page, then set the status to **Drafted**.
 6. A second Action checks Notion every 30 minutes from about 07:00 to 23:00 UK time, every day ([.github/workflows/watch.yml](.github/workflows/watch.yml)). For a Drafted page, Claude sub-edits the post: one overall comment on the page and comments on individual paragraphs. It never edits your text. The status becomes **Reviewed** and a comment @mentions you.
-7. You act on the comments you agree with. For a Tilia post, schedule it on LinkedIn and set the status to **Posted**. For a personal post, set it to **Ready**.
+7. You act on the comments you agree with. For a short post (or a Tilia post), schedule it on LinkedIn and set the status to **Posted**. For an article, set it to **Ready**.
 8. For a Ready page, the post is committed to the portfolio repo, which deploys the site. Once it's live, a **LinkedIn cut** is added under the post in Notion with a link to the full post, the status becomes **Published** and a comment @mentions you.
 9. You schedule the cut on LinkedIn and set the status to **Posted** (or **Dropped** at any point).
 
@@ -25,7 +30,7 @@ Twice a week, at 18:00 two days before a post, an interview-style writing brief 
 | Briefed | Script | Brief sent; write the post |
 | Drafted | You | Ask for a sub-edit |
 | Reviewed | Script | Comments are on the page |
-| Ready | You | Personal posts only: publish to the site |
+| Ready | You | Articles only: publish to the site |
 | Published | Script | Live on the site, LinkedIn cut written |
 | Posted | You | Scheduled on LinkedIn; done |
 
@@ -39,7 +44,7 @@ Claude runs through Claude Code with your Pro subscription, not the API. Usage i
 
 ## Adding ideas
 
-Add a row to the **Content ideas** database in Notion: a name, **Owner** (Personal or Tilia) and **Status** Idea. Notes are optional but help the brief.
+Add a row to the **Content ideas** database in Notion: a name, **Owner** (Personal or Tilia) and **Status** Idea. Notes are optional but help the brief. For personal ideas, leave **Format** empty if the topic could be an article or a short post, set it to pin one, or set **Make** for something to build.
 
 ## Setup (one-off)
 
@@ -65,7 +70,8 @@ The repo is public, so Action logs are too. GitHub also pauses scheduled workflo
 
 ```sh
 npm run dry:personal   # print a brief, change nothing
-npm run brief:tilia    # send a real Tilia brief now
+npm run dry:short      # print a short-post brief
+npm run dry:make       # print a Make brief
 npm run dry:watch      # print the sub-edit or publish for any Drafted or Ready page, change nothing
 npm run watch          # do it for real
 npm test

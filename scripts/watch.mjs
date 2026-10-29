@@ -3,6 +3,7 @@
 //   node scripts/watch.mjs --check                                 (GitHub Actions) only report whether anything is waiting
 //   node scripts/watch.mjs --review|--publish <pageId> [--dry-run] one page, whatever its status
 import { appendFile } from 'node:fs/promises';
+import { channelKeyFor } from './lib/channels.mjs';
 import { askClaudeJson } from './lib/claude.mjs';
 import { londonParts } from './lib/dates.mjs';
 import { addComment, appendBlocks, getIdea, listBlocks, queryIdeas, setStatus } from './lib/notion.mjs';
@@ -29,12 +30,17 @@ import { fill, read } from './lib/template.mjs';
 const POST_TYPES = {
   personal:
     "A blog article for James's site, james-sc.co.uk, about product and UX design more broadly. A shortened version is cross-posted to his personal LinkedIn.",
+  'personal-short':
+    "A short post of 120 to 200 words written natively for James's personal LinkedIn, about product and UX design more broadly. It isn't published anywhere else, so it has to land on its own in the feed.",
   tilia: "A short product or feature post for the Tilia business page on LinkedIn. It isn't published anywhere else.",
 };
 
+const THOUGHT_LEADERSHIP_GOAL =
+  "This post's job is to build James's standing as a voice worth following in product and UX design: a clear, arguable point of view, backed by his own experience, that peers remember and share. A bigger audience for James grows Tilia's audience by default, so the post isn't an advert. A mention of Tilia is fine where it genuinely belongs, but don't suggest adding one or making the post more promotional.";
+
 const POST_GOALS = {
-  personal:
-    "This post's job is to build James's standing as a voice worth following in product and UX design: a clear, arguable point of view, backed by his own experience, that peers remember and share. A bigger audience for James grows Tilia's audience by default, so the post isn't an advert. A mention of Tilia is fine where it genuinely belongs, but don't suggest adding one or making the post more promotional.",
+  personal: THOUGHT_LEADERSHIP_GOAL,
+  'personal-short': THOUGHT_LEADERSHIP_GOAL,
   tilia:
     "This post's job is to promote Tilia, a SaaS product, by making one feature and its value clear to the people it's for. Bring an eye for product marketing.",
 };
@@ -45,13 +51,26 @@ const flagValue = (flag) => (args.includes(flag) ? args[args.indexOf(flag) + 1] 
 const channels = JSON.parse(await read('config/channels.json'));
 
 const channelFor = (idea) => {
-  const key = Object.keys(channels).find((k) => channels[k].owner === idea.owner);
-  if (!key) throw new Error(`No channel is set up for owner "${idea.owner}"`);
+  const key = channelKeyFor(idea, channels);
   return { key, ...channels[key] };
 };
 
 async function review(idea) {
   const channel = channelFor(idea);
+  // A Make brief's answers are a build spec, not a post: nothing to sub-edit, just say what's next.
+  if (channel.subedit === false) {
+    if (dryRun) return console.log(`"${idea.title}" is a ${channel.format} brief; it would be marked Reviewed without a sub-edit.`);
+    await setStatus(idea.id, 'Reviewed');
+    await notify(idea.id, {
+      title: `Spec ready: ${idea.title}`,
+      lines: [
+        'Open Claude Code in the portfolio or templates repo and ask it to build from this page.',
+        "When it's live, set the status to Posted, and add a Short post idea to tell people about it.",
+      ],
+      link: { url: idea.url, label: 'Open in Notion' },
+    });
+    return console.log(`Marked "${idea.title}" Reviewed (no sub-edit for ${channel.format}).`);
+  }
   const paragraphs = extractPost(await listBlocks(idea.id));
   const prompt = fill(await read('prompts/subedit.md'), {
     postType: POST_TYPES[channel.key],
