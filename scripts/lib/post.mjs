@@ -1,5 +1,4 @@
 import { assert, isText, rich, wordCount } from './brief.mjs';
-import { escapeSlack } from './slack.mjs';
 
 const POST_HEADING = 'Finished post';
 const CUT_HEADING = 'LinkedIn cut';
@@ -159,25 +158,29 @@ export function toCutBlocks(cut, url) {
   ];
 }
 
-export function toReviewedSlack(review, { idea, nextStep }) {
+const openInNotion = (idea) => ({ url: idea.url, label: 'Open in Notion' });
+
+export function toReviewedMessage(review, { idea, nextStep }) {
   const count = review.comments.length;
-  return [
-    `*Sub-edit done: ${escapeSlack(idea.title)}*`,
-    `${count} comment${count === 1 ? '' : 's'} on the draft, plus an overall note. ${nextStep}`,
-    '',
-    `<${idea.url}|Open in Notion →>`,
-  ].join('\n');
+  return {
+    title: `Sub-edit done: ${idea.title}`,
+    lines: [`${count} comment${count === 1 ? '' : 's'} on the draft, plus an overall note. ${nextStep}`],
+    link: openInNotion(idea),
+  };
 }
 
-export function toPublishedSlack({ idea, url }) {
-  return [
-    `*Published: ${escapeSlack(idea.title)}*`,
-    `<${url}|It's live on your site>, and the LinkedIn cut is under the post in Notion. Schedule it on LinkedIn, then set the status to Posted.`,
-    '',
-    `<${idea.url}|Open in Notion →>`,
-  ].join('\n');
+export function toPublishedMessage({ idea, url }) {
+  return {
+    title: `Published: ${idea.title}`,
+    lines: [`It's live at ${url}, and the LinkedIn cut is under the post. Schedule it on LinkedIn, then set the status to Posted.`],
+    link: openInNotion(idea),
+  };
 }
 
-export function toFailedSlack({ idea, action, error, status }) {
-  return `*Couldn't ${action} "${escapeSlack(idea.title)}"*\n${escapeSlack(error.message)}\nI've set it back to ${status}. <${idea.url}|Open in Notion →>`;
+export function toFailedMessage({ idea, action, error, status }) {
+  return {
+    title: `Couldn't ${action} "${idea.title}"`,
+    lines: [error.message, `I've set it back to ${status}, so setting it again retries.`],
+    link: openInNotion(idea),
+  };
 }

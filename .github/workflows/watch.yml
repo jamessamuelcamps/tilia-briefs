@@ -2,11 +2,9 @@ name: Watch Notion
 
 on:
   schedule:
-    # Every 30 minutes for the two days after each brief: Sunday 17:00 UTC (18:00 UK in summer)
-    # to Thursday 18:59 UTC. GitHub runs these late when it's busy. Outside the window, run it by hand.
-    - cron: '*/30 17-23 * * 0'
-    - cron: '*/30 * * * 1-3'
-    - cron: '*/30 0-18 * * 4'
+    # Every 30 minutes, 06:00 to 22:30 UTC (about 07:00 to 23:00 UK), every day. Most runs only ask
+    # Notion whether anything is waiting, which costs nothing. GitHub runs these late when it's busy.
+    - cron: '*/30 6-22 * * *'
   workflow_dispatch:
 
 # One run at a time, so a slow publish can't be picked up twice.
@@ -22,6 +20,7 @@ jobs:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
       NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+      NOTION_USER_ID: ${{ secrets.NOTION_USER_ID }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       PORTFOLIO_TOKEN: ${{ secrets.PORTFOLIO_TOKEN }}
     steps:
@@ -33,8 +32,14 @@ jobs:
         id: check
         run: node scripts/watch.mjs --check
       # Most runs find nothing and stop here.
-      - if: steps.check.outputs.pending == 'true'
+      - name: Install Claude Code
+        id: install
+        if: steps.check.outputs.pending == 'true'
         run: npm install -g @anthropic-ai/claude-code
       - name: Sub-edit and publish
         if: steps.check.outputs.pending == 'true'
         run: node scripts/watch.mjs
+      # The scripts report their own failures; this covers the install step.
+      - name: Say if Claude Code couldn't be installed
+        if: failure() && steps.install.outcome == 'failure'
+        run: node scripts/alert.mjs "The Notion watcher couldn't install Claude Code"

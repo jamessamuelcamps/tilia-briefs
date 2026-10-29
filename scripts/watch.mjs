@@ -14,16 +14,16 @@ import {
   restoreCut,
   slugify,
   toCutBlocks,
-  toFailedSlack,
-  toPublishedSlack,
-  toReviewedSlack,
+  toFailedMessage,
+  toPublishedMessage,
+  toReviewedMessage,
   toSiteMarkdown,
   validatePublish,
   validateReview,
 } from './lib/post.mjs';
 import { wordCount } from './lib/brief.mjs';
 import { commitFile, waitUntilLive } from './lib/site.mjs';
-import { postToSlack } from './lib/slack.mjs';
+import { notify, runLink } from './lib/notify.mjs';
 import { fill, read } from './lib/template.mjs';
 
 const POST_TYPES = {
@@ -75,7 +75,7 @@ async function review(idea) {
   const nextStep = channel.site
     ? "When you're happy, set the status to Ready and I'll publish it."
     : "When you're happy, schedule it on LinkedIn and set the status to Posted.";
-  await postToSlack(toReviewedSlack(result, { idea, nextStep }));
+  await notify(idea.id, toReviewedMessage(result, { idea, nextStep }));
   console.log(`Sub-edited "${idea.title}": ${result.comments.length} comments.`);
 }
 
@@ -114,11 +114,11 @@ async function publish(idea) {
   // A retry after a failed run shouldn't add a second cut.
   if (!hasCut(blocks)) await appendBlocks(idea.id, toCutBlocks(cut, url));
   await setStatus(idea.id, 'Published');
-  await postToSlack(toPublishedSlack({ idea, url }));
+  await notify(idea.id, toPublishedMessage({ idea, url }));
   console.log(`Published "${idea.title}" at ${url}.`);
 }
 
-/** Runs one step; if it fails, says so in Slack and puts the status back so the next run doesn't retry forever. */
+/** Runs one step; if it fails, tells James and puts the status back so the next run doesn't retry forever. */
 async function attempt(step, idea, { action, fallback }) {
   try {
     await step(idea);
@@ -127,18 +127,17 @@ async function attempt(step, idea, { action, fallback }) {
     process.exitCode = 1;
     if (dryRun) return;
     await setStatus(idea.id, fallback);
-    await postToSlack(toFailedSlack({ idea, action, error, status: fallback }));
+    await notify(idea.id, toFailedMessage({ idea, action, error, status: fallback }));
   }
 }
 
 const reviewOpts = { action: 'sub-edit', fallback: 'Briefed' };
 const publishOpts = { action: 'publish', fallback: 'Reviewed' };
 
-if (flagValue('--review')) {
-  await attempt(review, await getIdea(flagValue('--review')), reviewOpts);
-} else if (flagValue('--publish')) {
-  await attempt(publish, await getIdea(flagValue('--publish')), publishOpts);
-} else {
+async function main() {
+  if (flagValue('--review')) return attempt(review, await getIdea(flagValue('--review')), reviewOpts);
+  if (flagValue('--publish')) return attempt(publish, await getIdea(flagValue('--publish')), publishOpts);
+
   const drafted = await queryIdeas(null, ['Drafted']);
   const ready = await queryIdeas(null, ['Ready']);
   console.log(`${drafted.length} drafted, ${ready.length} ready.`);
@@ -146,8 +145,18 @@ if (flagValue('--review')) {
   if (args.includes('--check')) {
     const pending = drafted.length + ready.length > 0;
     if (process.env.GITHUB_OUTPUT) await appendFile(process.env.GITHUB_OUTPUT, `pending=${pending}\n`);
-  } else {
-    for (const idea of drafted) await attempt(review, idea, reviewOpts);
-    for (const idea of ready) await attempt(publish, idea, publishOpts);
+    return;
   }
+  for (const idea of drafted) await attempt(review, idea, reviewOpts);
+  for (const idea of ready) await attempt(publish, idea, publishOpts);
 }
+
+// A crash outside a single page (Notion down, a deleted column) would otherwise fail quietly in Actions.
+await main().catch(async (error) => {
+  console.error(error);
+  process.exitCode = 1;
+  if (dryRun) return;
+  const link = runLink();
+  const message = { title: 'The Notion watcher crashed', lines: [error.message, 'Drafted and Ready pages wait until this is fixed.'] };
+  await notify(null, link ? { ...message, link } : message, { dedupe: true }).catch(() => {});
+});

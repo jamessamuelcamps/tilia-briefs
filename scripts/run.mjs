@@ -4,7 +4,7 @@
 import { askClaudeJson } from './lib/claude.mjs';
 import { addDays, formatDay, londonOffsetHours, londonParts } from './lib/dates.mjs';
 import { appendBlocks, createIdea, markBriefed, queryIdeas, BRIEFED_ONWARDS } from './lib/notion.mjs';
-import { postToSlack } from './lib/slack.mjs';
+import { notify, runLink } from './lib/notify.mjs';
 import { fill, read } from './lib/template.mjs';
 import { toNotionBlocks, toSlackText, validateBrief, validateResearch } from './lib/brief.mjs';
 
@@ -71,7 +71,7 @@ async function brief(key) {
   if (!candidates.length) {
     const message = `No ${owner} ideas left in Notion, so there's no brief for ${postDayLabel}. Add a few and I'll pick one next time.`;
     console.log(message);
-    if (!dryRun) await postToSlack(message);
+    if (!dryRun) await notify(null, { title: `No ${owner} ideas left`, lines: [message] });
     return;
   }
 
@@ -110,7 +110,11 @@ async function brief(key) {
 
   await appendBlocks(idea.id, toNotionBlocks(result, context));
   await markBriefed(idea.id, postDate);
-  await postToSlack(toSlackText(result, context));
+  await notify(idea.id, {
+    title: `New brief: ${idea.title}`,
+    lines: [`About ${result.totalWords} words for ${channel.label}, posting ${postDayLabel} at ${channel.postTime}.`, result.intro],
+    link: { url: idea.url, label: 'Start writing in Notion' },
+  });
   console.log(`Briefed "${idea.title}" for ${postDate}.`);
 }
 
@@ -120,5 +124,12 @@ if (!key) {
 } else if (!channels[key]) {
   throw new Error(`Unknown channel "${key}". Use one of: ${Object.keys(channels).join(', ')}`);
 } else {
-  await brief(key);
+  await brief(key).catch(async (error) => {
+    console.error(error);
+    process.exitCode = 1;
+    if (dryRun) return;
+    const link = runLink();
+    const message = { title: `The ${key} brief failed`, lines: [error.message] };
+    await notify(null, link ? { ...message, link } : message).catch(() => {});
+  });
 }

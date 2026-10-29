@@ -46,18 +46,24 @@ export async function createDatabase(parentPageId) {
   });
 }
 
-function toIdea(page) {
+const plainText = (parts) => (parts ?? []).map((t) => t.plain_text).join('');
+
+/**
+ * A database row as a plain object. Every property except the title is optional, so a column that's
+ * renamed or deleted in Notion gives null instead of crashing every run.
+ */
+export function toIdea(page) {
   const p = page.properties;
   return {
     id: page.id,
     url: page.url,
-    title: p.Name.title.map((t) => t.plain_text).join(''),
-    owner: p.Owner.select?.name ?? null,
-    status: p.Status.select?.name ?? null,
-    notes: p.Notes.rich_text.map((t) => t.plain_text).join(''),
-    source: p.Source.select?.name ?? null,
-    sourceUrl: p['Source URL'].url ?? null,
-    postDate: p['Post date'].date?.start?.slice(0, 10) ?? null,
+    title: plainText(p.Name?.title),
+    owner: p.Owner?.select?.name ?? null,
+    status: p.Status?.select?.name ?? null,
+    notes: plainText(p.Notes?.rich_text),
+    source: p.Source?.select?.name ?? null,
+    sourceUrl: p['Source URL']?.url ?? null,
+    postDate: p['Post date']?.date?.start?.slice(0, 10) ?? null,
   };
 }
 
@@ -146,7 +152,30 @@ export async function listBlocks(pageId) {
   return blocks;
 }
 
-/** Comments on a page ({ page_id }) or on one block ({ block_id }). The integration needs the "Insert comments" capability. */
+/**
+ * Comments on a page ({ page_id }) or on one block ({ block_id }). Content is a string or a rich_text array.
+ * The integration needs the "Insert comments" capability.
+ */
 export async function addComment(parent, content) {
-  return call('/comments', { method: 'POST', body: { parent, rich_text: text(content) } });
+  const rich_text = typeof content === 'string' ? text(content) : content;
+  return call('/comments', { method: 'POST', body: { parent, rich_text } });
+}
+
+/** Open comments on a page, newest last. Needs the "Read comments" capability. */
+export async function listComments(pageId) {
+  const comments = [];
+  let cursor;
+  do {
+    const res = await call(`/comments?block_id=${pageId}&page_size=100${cursor ? `&start_cursor=${cursor}` : ''}`);
+    comments.push(...res.results);
+    cursor = res.has_more ? res.next_cursor : undefined;
+  } while (cursor);
+  return comments;
+}
+
+/** The page the database sits under ("Tilia Briefs"), where crash alerts go. */
+export async function hubPageId() {
+  const database = await call(`/databases/${requireEnv('NOTION_DATABASE_ID')}`);
+  if (database.parent?.type !== 'page_id') throw new Error('The database is not directly under a page, so there is nowhere to post alerts');
+  return database.parent.page_id;
 }

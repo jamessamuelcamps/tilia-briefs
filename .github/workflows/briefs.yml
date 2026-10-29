@@ -25,14 +25,19 @@ jobs:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
       NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+      NOTION_USER_ID: ${{ secrets.NOTION_USER_ID }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: npm install -g @anthropic-ai/claude-code
-      - run: npm test
+      - name: Install Claude Code
+        id: install
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Test
+        id: test
+        run: npm test
       - name: Send brief
         env:
           SCHEDULE: ${{ github.event.schedule }}
@@ -46,9 +51,7 @@ jobs:
           else
             node scripts/run.mjs "$CHANNEL" --force
           fi
-      - name: Tell Slack if it failed
-        if: failure()
-        run: |
-          curl -sS -X POST -H 'Content-Type: application/json' \
-            -d "{\"text\":\"This week's brief failed to send. <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|See the run log>\"}" \
-            "$SLACK_WEBHOOK_URL"
+      # The brief script reports its own failures; this covers the steps before it.
+      - name: Say if it failed before the brief ran
+        if: failure() && (steps.install.outcome == 'failure' || steps.test.outcome == 'failure')
+        run: node scripts/alert.mjs "This week's brief failed before it started"
