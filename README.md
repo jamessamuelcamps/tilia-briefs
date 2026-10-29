@@ -57,6 +57,7 @@ Tilia go-to-market work is drafted by Claude, not briefed, and nothing goes out 
   - **LinkedIn posts:** edit the text under **Draft** if you like, then set the status to **Approved**. Within 30 minutes the watcher adds it to the end of the Tilia page's Buffer queue and sets it to **Scheduled**.
   - **Outreach and community rows:** send them yourself from your own account, then set them to **Sent**. Set anything you don't want to **Rejected**.
   - **Feedback:** to steer next week, write in **Feedback** or comment on the row; the routine reads both.
+  - **Leads:** the routine can't read LinkedIn or Reddit, so if you spot someone there, add a row with Type **Outreach** and the link in **Target URL**. Monday's run drafts the message.
 - **Routines run on your Claude plan** and are listed at claude.ai/code/routines. Edit the prompt files here to change what they do.
 
 | GTM status | Set by | Meaning |

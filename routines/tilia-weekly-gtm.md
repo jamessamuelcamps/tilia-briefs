@@ -9,7 +9,7 @@ Read these before anything else; they are the truth about the product. Don't cla
 - `tilia/README.md`, `tilia/docs/pricing.md`, `tilia/docs/roadmap.md`
 - `tilia/client/src/data/competitors.js` (what we say about Maze, Lyssna, Optimal Workshop, UXtweak and UserTesting, with sources)
 - `tilia/client/src/data/methodPages.js` (the method guides)
-- `ux-research-templates/README.md` and `ux-research-templates/CHANGELOG.md` (the public templates and the product changelog)
+- `ux-research-templates/README.md` and, if it exists, `ux-research-templates/CHANGELOG.md` (the public templates and the product changelog). If there is no changelog, use `git -C tilia log --since="60 days ago" --oneline` for recent features, and only describe ones you can confirm in the code.
 - `tilia-briefs/config/tilia.md` and `tilia-briefs/config/voice-guide.md`
 
 In short: async, unmoderated research (tree test, card sort, survey, preference, five-second, first-click) with AI synthesis, for lean teams. A free plan with no cap on studies or responses; Pro is £49 a month. It competes on **price and focus**, not on feature count, and says plainly when another tool is the better choice.
@@ -63,7 +63,16 @@ Type `Outreach`. Find people in the audience above who have **publicly shown the
 - a startup advertising its first product designer or researcher role
 - a solo researcher or designer complaining about tool pricing or stitching Forms and spreadsheets together
 
-Search the web (LinkedIn posts, Reddit, Indie Hackers, X, company careers pages). For each one:
+**Leads from James come first.** He may add rows himself with Type `Outreach` and a Target URL (a LinkedIn post or Reddit thread he spotted) but no `Draft` section. For each of those, read what you can of the link, then fill in Target, Why and the Draft as below, and leave his row at Needs approval.
+
+Then search for new ones. LinkedIn, Reddit and X usually block automated fetching, so don't rely on them, and don't try to get round a block. These sources work:
+- **Hacker News**, through its public search API, e.g. `curl -s "https://hn.algolia.com/api/v1/search_by_date?query=tree%20testing&tags=(story,comment)&numericFilters=created_at_i>UNIX_TIME_60_DAYS_AGO"`. Try queries like "card sorting", "tree test", "user research tool", "information architecture", "Maze pricing", "Optimal Workshop". Link the comment as `https://news.ycombinator.com/item?id=<objectID>`.
+- **Job ads** through web search, e.g. `"founding product designer"` or `"first designer"` with `site:jobs.ashbyhq.com`, `site:jobs.lever.co` or `site:boards.greenhouse.io`. The hiring company is the target (the founder or head of product, if named on the company's own site), and the ad is the Target URL.
+- **Indie Hackers, Product Hunt and founders' own blogs** through web search, for posts about testing navigation, onboarding or research on a budget.
+
+Quality beats count: five real, verifiable people is better than ten guesses. If you find fewer than five, say so in the digest and suggest where James could look himself.
+
+For each one:
 - **Target**: name, role and company. **Target URL**: the public post, thread or profile showing the need. **Why**: the signal, in one line. **Channel**: `James LinkedIn` unless a business email is published (then `Email`).
 - **Draft**: a message of 80 words or fewer in James's voice (first person, warm, direct). It must refer to their specific post or situation, offer something useful with no strings (the free plan, a relevant template, or a quick look at their study plan), include at most one link, and make no hard sell. No templated openers like "I came across your profile".
 
@@ -71,7 +80,7 @@ Skip anyone already in the database, anyone who looks like a student or a privat
 
 ### 4. Three to five partnership and community openings
 
-Type `Partnership` or `Community reply`, with a matching Channel. For example:
+Type `Partnership` or `Community reply`, with a matching Channel. Before drafting, open each target's own site and check that it's active (something published in the last three months) and that it takes what you're offering (a "submit a tool", "sponsor", "guest" or "contact" page). Put that page in Target URL and say what you checked in the note. Skip any you can't verify. For example:
 - **Newsletters** for product people and UX researchers that take tools, guest posts or swaps (draft a short pitch to the editor).
 - **Podcasts** about product, UX or indie SaaS where James could talk about building tilia or research on a budget (draft the pitch).
 - **Educators**: HCI courses and UX bootcamps, offering free use for teaching (draft the email).
