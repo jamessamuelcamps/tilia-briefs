@@ -7,7 +7,7 @@ const VERSION = '2022-06-28';
 export const STATUSES = ['Idea', 'Briefed', 'Drafted', 'Reviewed', 'Ready', 'Published', 'Posted', 'Dropped'];
 export const BRIEFED_ONWARDS = STATUSES.filter((s) => s !== 'Idea' && s !== 'Dropped');
 export const SOURCES = ['Spreadsheet', 'Research', 'Manual'];
-export const OWNERS = ['Personal', 'Tilia'];
+export const OWNERS = ['Personal'];
 
 async function call(path, { method = 'GET', body } = {}) {
   const res = await fetch(API + path, {

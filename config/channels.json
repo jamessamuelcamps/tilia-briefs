@@ -42,12 +42,5 @@
     "prompt": "prompts/brief-make.md",
     "writeHeading": "Notes for the build",
     "subedit": false
-  },
-  "tilia": {
-    "owner": "Tilia",
-    "label": "the Tilia page",
-    "minWords": 120,
-    "maxWords": 180,
-    "research": false
   }
 }

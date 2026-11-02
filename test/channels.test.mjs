@@ -24,8 +24,7 @@ test('a briefed page goes back to the channel its format names; old pages count 
   assert.equal(channelKeyFor(idea('Personal', 'Make'), channels), 'make');
   assert.equal(channelKeyFor(idea('Personal', 'Article'), channels), 'personal');
   assert.equal(channelKeyFor(idea('Personal'), channels), 'personal');
-  assert.equal(channelKeyFor(idea('Tilia'), channels), 'tilia');
-  assert.throws(() => channelKeyFor(idea('Nobody'), channels), /No channel/);
+  assert.throws(() => channelKeyFor(idea('Tilia'), channels), /No channel/);
 });
 
 test('Sunday sends the article, plus the Make brief in the first week; Tuesday sends the short post', () => {
@@ -33,8 +32,4 @@ test('Sunday sends the article, plus the Make brief in the first week; Tuesday s
   assert.deepEqual(channelsBriefedOn({ weekday: 'Sunday', date: '2026-11-08' }, channels), ['personal']);
   assert.deepEqual(channelsBriefedOn({ weekday: 'Tuesday', date: '2026-11-03' }, channels), ['personal-short']);
   assert.deepEqual(channelsBriefedOn({ weekday: 'Wednesday', date: '2026-11-04' }, channels), []);
-});
-
-test('the Tilia channel is never briefed on a schedule now', () => {
-  assert.equal(channels.tilia.briefDay, undefined);
 });

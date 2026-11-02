@@ -10,7 +10,7 @@ Twice a week, at 18:00 two days before a post, an interview-style writing brief 
 
 A Make brief scopes the build: who it's for, the smallest useful version, where it lives. Your answers are the spec. Set it to Drafted when you've answered, and you'll be reminded to open Claude Code in the portfolio or templates repo and build from the page. There's no sub-edit for a Make page; set it to Posted once it's live.
 
-Tilia posts are no longer briefed here. Any Tilia page that's already Briefed or Drafted still gets its sub-edit.
+Content ideas is for your personal writing only. Tilia posts are drafted separately, in the Tilia GTM database (below).
 
 ## How it works
 
@@ -20,7 +20,7 @@ Tilia posts are no longer briefed here. Any Tilia page that's already Briefed or
 4. The brief is appended to that idea's Notion page, its status becomes **Briefed**, its **Format** is set to the kind of brief, and a comment @mentions you.
 5. You write the post under **Finished post** on that page, then set the status to **Drafted**.
 6. A second Action checks Notion every 30 minutes from about 07:00 to 23:00 UK time, every day ([.github/workflows/watch.yml](.github/workflows/watch.yml)). For a Drafted page, Claude sub-edits the post: one overall comment on the page and comments on individual paragraphs. It never edits your text. The status becomes **Reviewed** and a comment @mentions you.
-7. You act on the comments you agree with. For a short post (or a Tilia post), schedule it on LinkedIn and set the status to **Posted**. For an article, set it to **Ready**.
+7. You act on the comments you agree with. For a short post, schedule it on LinkedIn and set the status to **Posted**. For an article, set it to **Ready**.
 8. For a Ready page, the post is committed to the portfolio repo, which deploys the site. Once it's live, a **LinkedIn cut** is added under the post in Notion with a link to the full post, the status becomes **Published** and a comment @mentions you.
 9. You schedule the cut on LinkedIn and set the status to **Posted** (or **Dropped** at any point).
 
@@ -73,7 +73,7 @@ Tilia go-to-market work is drafted by Claude, not briefed, and nothing goes out 
 
 ## Adding ideas
 
-Add a row to the **Content ideas** database in Notion: a name, **Owner** (Personal or Tilia) and **Status** Idea. Notes are optional but help the brief. For personal ideas, leave **Format** empty if the topic could be an article or a short post, set it to pin one, or set **Make** for something to build.
+Add a row to the **Content ideas** database in Notion: a name, **Owner** Personal and **Status** Idea. Notes are optional but help the brief. Leave **Format** empty if the topic could be an article or a short post, set it to pin one, or set **Make** for something to build.
 
 ## Setup (one-off)
 

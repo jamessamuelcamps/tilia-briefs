@@ -1,5 +1,5 @@
 // Usage:
-//   node scripts/run.mjs personal|personal-short|make|tilia [--dry-run] [--force]
+//   node scripts/run.mjs personal|personal-short|make [--dry-run] [--force]
 //   node scripts/run.mjs --scheduled   (GitHub Actions; works out the channels from the day and UK time)
 import { askClaudeJson } from './lib/claude.mjs';
 import { channelKeyFor, channelsBriefedOn, matchesChannel } from './lib/channels.mjs';
@@ -20,8 +20,6 @@ const CHANNEL_RULES = {
   personal: `This is a blog article for James's site, written as himself; a shortened version goes on his personal LinkedIn. ${THOUGHT_LEADERSHIP}`,
   'personal-short': `This is a short post written natively for James's personal LinkedIn, as himself. It isn't published anywhere else. One sharp observation is enough: a specific moment from his work, the point it proves, and what readers should take from it. Use 3 sections, with one or two questions each. ${THOUGHT_LEADERSHIP}`,
   make: 'This brief scopes something James will build and give away to the product and UX community: a small free tool or a template kit.',
-  tilia:
-    "This is the Tilia business page, introducing one feature. Interview James about: the problem it solves, who it's for, how it works in Tilia, and one concrete example of it in use. Keep it short and specific. Don't describe the feature yourself; ask him.",
 };
 
 const bullets = (items) => (items.length ? items.map((i) => `- ${i}`).join('\n') : '- (none)');

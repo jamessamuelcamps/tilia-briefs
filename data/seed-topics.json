@@ -13,22 +13,5 @@
   { "owner": "Personal", "title": "How can we design with intentionality?", "notes": "", "status": "Idea" },
   { "owner": "Personal", "title": "What are some good ways to prioritise?", "notes": "", "status": "Idea" },
   { "owner": "Personal", "title": "Three spectrums of workload", "notes": "", "status": "Idea" },
-  { "owner": "Personal", "title": "Gathering knowledge vs reducing risk", "notes": "", "status": "Idea" },
-
-  { "owner": "Tilia", "title": "Tree test", "notes": "What the F: intro post about a Tilia feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Card sort", "notes": "What the F: intro post about a Tilia feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Survey", "notes": "What the F: intro post about a Tilia feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Preference test", "notes": "What the F: intro post about a Tilia feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Five-second test", "notes": "What the F: intro post about a Tilia feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "First-click test", "notes": "What the F: intro post about a Tilia feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Synthesis", "notes": "What the F: intro post about a Tilia feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Repository", "notes": "What the F: intro post about a Tilia feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Workspace", "notes": "What the F: intro post about a Tilia feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Screeners", "notes": "What the F: intro post about a Tilia feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Consent", "notes": "What the F: intro post about a Tilia feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Export", "notes": "What the F: intro post about a Tilia feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Survey settings", "notes": "What's new: post about a newly shipped feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Mixed studies", "notes": "What's new: post about a newly shipped feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Conditional questions", "notes": "What's new: post about a newly shipped feature.", "status": "Idea" },
-  { "owner": "Tilia", "title": "Upload from markdown", "notes": "What's new: post about a newly shipped feature. Get AI to create the markdown.", "status": "Idea" }
+  { "owner": "Personal", "title": "Gathering knowledge vs reducing risk", "notes": "", "status": "Idea" }
 ]

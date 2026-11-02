@@ -33,7 +33,6 @@ const POST_TYPES = {
     "A blog article for James's site, james-sc.co.uk, about product and UX design more broadly. A shortened version is cross-posted to his personal LinkedIn.",
   'personal-short':
     "A short post of 120 to 200 words written natively for James's personal LinkedIn, about product and UX design more broadly. It isn't published anywhere else, so it has to land on its own in the feed.",
-  tilia: "A short product or feature post for the Tilia business page on LinkedIn. It isn't published anywhere else.",
 };
 
 const THOUGHT_LEADERSHIP_GOAL =
@@ -42,8 +41,6 @@ const THOUGHT_LEADERSHIP_GOAL =
 const POST_GOALS = {
   personal: THOUGHT_LEADERSHIP_GOAL,
   'personal-short': THOUGHT_LEADERSHIP_GOAL,
-  tilia:
-    "This post's job is to promote Tilia, a SaaS product, by making one feature and its value clear to the people it's for. Bring an eye for product marketing.",
 };
 
 const args = process.argv.slice(2);
