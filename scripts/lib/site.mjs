@@ -4,11 +4,11 @@ const API = 'https://api.github.com';
 const LIVE_TIMEOUT_MS = 10 * 60 * 1000;
 const LIVE_POLL_MS = 20 * 1000;
 
-async function github(path, { method = 'GET', body } = {}) {
+async function github(path, { method = 'GET', body, token = requireEnv('PORTFOLIO_TOKEN') } = {}) {
   const res = await fetch(API + path, {
     method,
     headers: {
-      Authorization: `Bearer ${requireEnv('PORTFOLIO_TOKEN')}`,
+      Authorization: `Bearer ${token}`,
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
       'User-Agent': 'tilia-briefs',
@@ -21,14 +21,18 @@ async function github(path, { method = 'GET', body } = {}) {
   return json;
 }
 
-/** Commits one file to the site repo, replacing it if it's already there. The push starts the site's own deploy. */
-export async function commitFile({ repo, branch, path, content, message }) {
-  const existing = await github(`/repos/${repo}/contents/${path}?ref=${branch}`);
-  const encoded = Buffer.from(content, 'utf8').toString('base64');
+/**
+ * Commits one file (text or bytes), replacing it if it's already there. Uses PORTFOLIO_TOKEN unless given a token.
+ * A push to the site repo starts the site's own deploy.
+ */
+export async function commitFile({ repo, branch, path, content, message, token }) {
+  const existing = await github(`/repos/${repo}/contents/${path}?ref=${branch}`, { token });
+  const encoded = (Buffer.isBuffer(content) ? content : Buffer.from(content, 'utf8')).toString('base64');
   if (existing && existing.content.replace(/\s/g, '') === encoded) return false;
   await github(`/repos/${repo}/contents/${path}`, {
     method: 'PUT',
     body: { message, content: encoded, branch, sha: existing?.sha },
+    token,
   });
   return true;
 }

@@ -36,7 +36,10 @@ Branch `feat/template-<slug>`, commit as above, push, and open a PR describing w
 In "Tilia GTM" (`collection://d3104d2a-56d7-4ead-b25c-96feaa91ab98`; fetch it first for the schema), create three rows, each with Status `Needs approval` and Week set to the Monday of this week:
 - Type `SEO page`, Channel `tilialabs.io`. Name: the page title. Target URL: the PR link. Body: what to check before merging.
 - Type `Template`, Channel `GitHub`. Name: the template name. Target URL: the PR link. Body: as above.
-- Type `LinkedIn post`, Channel `Tilia LinkedIn`. Name: "Template drop: <template name>". Due: a week from today. Body: two lines saying it should only be approved after the template PR is merged, then a heading 2 titled exactly `Draft`, then a post of 80 to 150 words with the template's GitHub link (`https://github.com/tilia-labs/ux-research-templates/blob/main/templates/...`). Then a divider.
+- Type `LinkedIn post`, Channel `Tilia LinkedIn`. Name: "Template drop: <template name>". Due: a week from today. Body: two lines saying it should only be approved after the template PR is merged, then a heading 2 titled exactly `Draft`, then a post of 80 to 150 words with the template's GitHub link (`https://github.com/tilia-labs/ux-research-templates/blob/main/templates/...`). Then a divider, a heading 2 titled exactly `Image`, and these lines as plain paragraphs (the watcher turns them into an image card), then another divider:
+  - `card: template`
+  - `type: <the method, 20 characters at most, e.g. Tree test>`
+  - `name: <the template name, 40 characters at most>`
 
 Add a page comment on the LinkedIn post row mentioning James (`user://782c3151-92a2-4129-a28f-710dc5c42ad7`), saying both PRs are ready to review, with their links.
 

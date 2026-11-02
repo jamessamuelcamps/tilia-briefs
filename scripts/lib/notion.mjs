@@ -129,9 +129,30 @@ export async function markBriefed(pageId, postDate, format = null) {
   return call(`/pages/${pageId}`, { method: 'PATCH', body: { properties } });
 }
 
-export async function appendBlocks(pageId, children) {
-  return call(`/blocks/${pageId}/children`, { method: 'PATCH', body: { children } });
+/** Adds blocks to the end of a page, or straight after the block `after`. */
+export async function appendBlocks(pageId, children, { after } = {}) {
+  return call(`/blocks/${pageId}/children`, { method: 'PATCH', body: after ? { children, after } : { children } });
 }
+
+/** Uploads a file to Notion and returns its upload id, for an image block. Needs the "Insert content" capability. */
+export async function uploadFile(filename, bytes, contentType) {
+  const upload = await call('/file_uploads', { method: 'POST', body: { filename, content_type: contentType } });
+  const form = new FormData();
+  form.append('file', new Blob([bytes], { type: contentType }), filename);
+  const res = await fetch(`${API}/file_uploads/${upload.id}/send`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${requireEnv('NOTION_TOKEN')}`, 'Notion-Version': VERSION },
+    body: form,
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(`Notion file upload failed (${res.status}): ${json.message}`);
+  return upload.id;
+}
+
+export const imageBlock = (uploadId) => ({ type: 'image', image: { type: 'file_upload', file_upload: { id: uploadId } } });
+
+/** Where an image block's file can be downloaded. Notion's own file links expire after an hour. */
+export const imageUrl = (block) => block.image?.file?.url ?? block.image?.external?.url ?? null;
 
 export async function getIdea(pageId) {
   return toIdea(await call(`/pages/${pageId}`));

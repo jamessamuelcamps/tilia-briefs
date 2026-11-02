@@ -30,8 +30,13 @@ export async function listChannels() {
   return channels;
 }
 
-/** Adds a text post to the end of a channel's queue. Returns the Buffer post id. */
-export async function addToQueue({ channelId, text }) {
+/**
+ * Adds a post to the end of a channel's queue, with an image if given. Buffer fetches the image when the post
+ * goes out, so its URL has to stay public until then. Returns the Buffer post id.
+ */
+export async function addToQueue({ channelId, text, imageUrl }) {
+  const input = { channelId, text, schedulingType: 'automatic', mode: 'addToQueue' };
+  if (imageUrl) input.assets = [{ image: { url: imageUrl } }];
   const data = await graphql(
     `mutation CreatePost($input: CreatePostInput!) {
       createPost(input: $input) {
@@ -39,7 +44,7 @@ export async function addToQueue({ channelId, text }) {
         ... on MutationError { message }
       }
     }`,
-    { input: { channelId, text, schedulingType: 'automatic', mode: 'addToQueue' } },
+    { input },
   );
   const result = data.createPost;
   if (!result?.post) throw new Error(`Buffer didn't queue the post: ${result?.message ?? 'no reason given'}`);

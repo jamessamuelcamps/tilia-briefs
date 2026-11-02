@@ -16,7 +16,11 @@ jobs:
   watch:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    # To commit Tilia post images to media/, so Buffer has a link that doesn't expire.
+    permissions:
+      contents: write
     env:
+      GITHUB_TOKEN: ${{ github.token }}
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
       NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
@@ -31,7 +35,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Queue approved Tilia posts, look for Drafted or Ready pages
+      # Image cards are rendered with the runner's own Google Chrome.
+      - name: Add Tilia image cards, queue approved Tilia posts, look for Drafted or Ready pages
         id: check
         run: node scripts/watch.mjs --check
       # Most runs find nothing and stop here.

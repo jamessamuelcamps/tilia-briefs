@@ -1,0 +1,7 @@
+[
+  { "card": "stat", "stat": "73%", "label": "of participants found the billing page on the first try", "source": "Source: tilia tree test, 212 participants, 2026" },
+  { "card": "mistake", "mistake": "Testing your navigation with labels you wrote yourself", "fix": "Run an open card sort first and use the words people group by" },
+  { "card": "headline", "headline": "Your users aren’t lost. Your labels are.", "support": "A tree test shows exactly where people take the wrong turn, before you ship the menu." },
+  { "card": "template", "type": "Tree test", "name": "SaaS settings navigation" },
+  { "card": "screenshot", "caption": "Every first click, mapped in one view", "url": "https://tilialabs.io/" }
+]

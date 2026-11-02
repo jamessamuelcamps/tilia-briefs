@@ -55,10 +55,12 @@ Tilia go-to-market work is drafted by Claude, not briefed, and nothing goes out 
 - **On the 2nd of each month** a second routine ([routines/tilia-monthly-seo.md](routines/tilia-monthly-seo.md)) opens two pull requests for you to review: a search page on tilialabs.io and a new public template. It also drafts a LinkedIn post about the template.
 - **What you do:**
   - **LinkedIn posts:** edit the text under **Draft** if you like, then set the status to **Approved**. Within 30 minutes the watcher adds it to the end of the Tilia page's Buffer queue and sets it to **Scheduled**.
+  - **Images on LinkedIn posts:** each draft has an **Image** section with a card spec (`card: stat`, `mistake`, `headline`, `template`, `screenshot` or `none`, then one `key: value` line per field). Within 30 minutes the watcher renders it as a 1080 × 1350 card from the [Figma templates](https://www.figma.com/design/rMEzm7xJUzwNH8hRt4C7D0/Tilia-Social-Templates) and adds it under the spec. To change it, edit the lines and delete the image; to use your own, add an image below it (the last image under **Image** is the one posted). If a card can't be made, a note under **Image** says why. On approval the image is committed to [media/](media/) so Buffer has a link that doesn't expire.
   - **Outreach and community rows:** send them yourself from your own account, then set them to **Sent**. Set anything you don't want to **Rejected**.
   - **Feedback:** to steer next week, write in **Feedback** or comment on the row; the routine reads both.
   - **Leads:** the routine can't read LinkedIn or Reddit, so if you spot someone there, add a row with Type **Outreach** and the link in **Target URL**. Monday's run drafts the message.
 - **Routines run on your Claude plan** and are listed at claude.ai/code/routines. Edit the prompt files here to change what they do.
+- **Cards** live in [cards/](cards/): the photo, fonts and example text from Figma, and the HTML in [scripts/lib/card.mjs](scripts/lib/card.mjs). `npm run cards` renders the examples to `cards/out/` to compare with Figma, and `npm run cards -- <pageId>` renders the card a page asks for. It needs Chrome or Edge (or `CHROME_PATH`); GitHub's runners have Chrome already.
 
 | GTM status | Set by | Meaning |
 | --- | --- | --- |

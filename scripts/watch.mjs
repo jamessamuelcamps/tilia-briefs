@@ -4,7 +4,7 @@
 //   node scripts/watch.mjs --review|--publish <pageId> [--dry-run] one page, whatever its status
 import { appendFile } from 'node:fs/promises';
 import { channelKeyFor } from './lib/channels.mjs';
-import { queueApprovedPosts } from './lib/gtm.mjs';
+import { addCardsToDrafts, queueApprovedPosts } from './lib/gtm.mjs';
 import { askClaudeJson } from './lib/claude.mjs';
 import { londonParts } from './lib/dates.mjs';
 import { addComment, appendBlocks, getIdea, listBlocks, queryIdeas, setStatus } from './lib/notion.mjs';
@@ -158,11 +158,12 @@ async function main() {
   if (flagValue('--review')) return attempt(review, await getIdea(flagValue('--review')), reviewOpts);
   if (flagValue('--publish')) return attempt(publish, await getIdea(flagValue('--publish')), publishOpts);
 
-  // Queuing approved Tilia posts needs no Claude, so it runs in the cheap check step too.
+  // Tilia image cards and the Buffer queue need no Claude, so they run in the cheap check step too.
+  const cards = await addCardsToDrafts({ dryRun });
   const queued = await queueApprovedPosts({ dryRun });
   const drafted = await queryIdeas(null, ['Drafted']);
   const ready = await queryIdeas(null, ['Ready']);
-  console.log(`${drafted.length} drafted, ${ready.length} ready, ${queued} Tilia posts approved for Buffer.`);
+  console.log(`${drafted.length} drafted, ${ready.length} ready, ${queued} Tilia posts approved for Buffer, ${cards} image cards added.`);
 
   if (args.includes('--check')) {
     const pending = drafted.length + ready.length > 0;

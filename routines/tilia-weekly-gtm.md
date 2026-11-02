@@ -34,6 +34,8 @@ Every row you create: **Status** `Needs approval`, **Week** this Monday's date, 
 2. A heading 2 titled exactly `Draft`, then the text to post or send, as plain paragraphs or bullet lists. Nothing else under it, because a LinkedIn post is sent from this section exactly as written.
 3. A divider. Anything after it (alternatives, sources) is ignored when posting.
 
+LinkedIn posts also get an image section straight after that divider (see step 2): a heading 2 titled exactly `Image`, the card spec as plain paragraphs, one `key: value` per line, then another divider before any notes.
+
 James's Notion user is `user://782c3151-92a2-4129-a28f-710dc5c42ad7`.
 
 ## Steps
@@ -55,6 +57,27 @@ Type `LinkedIn post`, Channel `Tilia LinkedIn`. Due: this week's Tuesday, Wednes
 - **Method explainer:** what a tree test, card sort or first-click test tells you, when to use it, from `methodPages.js`.
 
 Open with something specific (a situation, a number from the product's own files, a question practitioners argue about), not "Excited to share". End with one clear next step and a UTM link.
+
+**Image card.** Under the `Image` heading, pick the card that fits the post and fill its fields. The watcher turns it into a 1080 x 1350 image on the page within half an hour, so James sees it before approving. Text on the card follows the house rules and must be true to the files above; never invent a number for a stat card. Stay within the character limits, or the card isn't made:
+
+| card | fields (characters) | use it for |
+| --- | --- | --- |
+| `stat` | `stat` (6), `label` (80), `source` (60, optional) | one number from the product's own files or a cited source: put only the number in `stat` (`£49`, `6`, `73%`) and the words in `label` |
+| `mistake` | `mistake` (80), `fix` (80) | the research mistake and fix pillar |
+| `headline` | `headline` (50), `support` (110, optional) | an opinion, a method explainer or a comparison |
+| `template` | `type` (20, the method, e.g. `Tree test`), `name` (40), `github` (30, optional, defaults to "Free on GitHub") | a template drop |
+| `screenshot` | `caption` (40), `url` (a page on https://tilialabs.io) | a feature, shown on the live site |
+| `none` | | a post that works better as text |
+
+For example:
+
+```
+card: mistake
+mistake: Testing your navigation with labels you wrote yourself
+fix: Run an open card sort first and use the words people group by
+```
+
+The card should add something the first line of the post doesn't already say, not repeat it. Until the end of November 2026, make the Wednesday post `card: none` and give the other two an image, so James can compare them in Buffer's analytics.
 
 ### 3. About ten outreach prospects
 
