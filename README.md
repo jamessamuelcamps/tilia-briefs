@@ -36,7 +36,7 @@ Content ideas is for your personal writing only. Tilia posts are drafted separat
 
 Expect up to 30 minutes between changing a status and something happening, often more: GitHub runs scheduled jobs late, and sometimes hours late, when it's busy. Overnight the watcher doesn't run. To skip the wait, go to Actions → Watch Notion → Run workflow, or run `gh workflow run watch.yml`. If a step fails, a comment on the page says why and the status goes back to the one before, so setting it again retries. If a whole run crashes (Notion down, a column renamed), a comment on the **Tilia Briefs** page says so, once every 12 hours at most.
 
-Notifications are Notion comments that @mention you. Check that Notion's mobile app has push notifications on and that **Settings → Notifications → Email** includes mentions. Slack is optional: if `SLACK_WEBHOOK_URL` is set, messages go there too.
+Notifications are Notion comments that @mention you. Check that Notion's mobile app has push notifications on and that **Settings → Notifications → Email** includes mentions.
 
 The LinkedIn cut is a teaser of 150 to 200 words made only by removing text from your post. The script checks every word against the post and saves your original characters, so a cut with rewritten text is rejected. The site description and tags (three at most) are the only words Claude writes; edit them in the portfolio repo if you want to.
 
@@ -77,7 +77,7 @@ Add a row to the **Content ideas** database in Notion: a name, **Owner** Persona
 
 ## Setup (one-off)
 
-1. **Your Notion user ID.** This is who the notification comments @mention. Get it from `GET https://api.notion.com/v1/users` with the integration token (step 2), or ask Claude to look it up through the Notion connector. Optionally, also create a Slack incoming webhook if you want messages there too.
+1. **Your Notion user ID.** This is who the notification comments @mention. Get it from `GET https://api.notion.com/v1/users` with the integration token (step 2), or ask Claude to look it up through the Notion connector.
 2. **Notion.** Go to notion.so/profile/integrations → New integration (internal) and copy the secret. Under **Capabilities**, tick **Read comments** and **Insert comments**, so the sub-editor can comment and alerts aren't repeated. Create a page (for example "Tilia content"), open its ••• menu → **Connections** and add the integration. Copy the page ID: the 32 characters at the end of the page URL.
 3. **Create the database.** Copy `.env.example` to `.env`, fill in `NOTION_TOKEN` and `NOTION_PARENT_PAGE_ID`, then run `npm run setup:notion`. It creates the database, imports the GTM tracker topics, and prints `NOTION_DATABASE_ID`. Add that to `.env`.
 4. **Claude token.** Run `claude setup-token` and copy the token it prints (valid for a year).
@@ -89,7 +89,6 @@ Add a row to the **Content ideas** database in Notion: a name, **Owner** Persona
    gh secret set NOTION_TOKEN
    gh secret set NOTION_DATABASE_ID
    gh secret set NOTION_USER_ID
-   gh secret set SLACK_WEBHOOK_URL   # optional
    gh secret set PORTFOLIO_TOKEN
    gh secret set NOTION_GTM_DATABASE_ID
    gh secret set BUFFER_API_KEY

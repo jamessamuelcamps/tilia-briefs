@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { isRepeat, toCommentRichText, toSlackText } from '../scripts/lib/notify.mjs';
+import { isRepeat, toCommentRichText } from '../scripts/lib/notify.mjs';
 import { toIdea } from '../scripts/lib/notion.mjs';
 
 const message = { title: 'Sub-edit done: A & B', lines: ['3 comments.'], link: { url: 'https://notion.so/x', label: 'Open in Notion' } };
@@ -18,10 +18,6 @@ test('without a user id the comment still goes up, just without a mention', () =
   const parts = toCommentRichText({ title: 'Hello' }, undefined);
   assert.equal(parts.length, 1);
   assert.equal(parts[0].text.content, 'Hello');
-});
-
-test('Slack text escapes control characters', () => {
-  assert.equal(toSlackText(message), '*Sub-edit done: A &amp; B*\n3 comments.\n<https://notion.so/x|Open in Notion>');
 });
 
 test('a crash alert is a repeat only if the same title went up in the last 12 hours', () => {

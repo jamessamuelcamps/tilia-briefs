@@ -1,5 +1,3 @@
-import { escapeSlack } from './slack.mjs';
-
 export const isText = (v) => typeof v === 'string' && v.trim().length > 0;
 export const wordCount = (v) => v.trim().split(/\s+/).length;
 
@@ -46,25 +44,14 @@ export function validateResearch(data, { existingTitles, maxIdeas }) {
   }
 }
 
-/** The Slack message: readable in full from the notification. */
-export function toSlackText(brief, { idea, channel, postDayLabel, notionUrl }) {
-  const lines = [
-    `*${escapeSlack(briefHeadline(brief, { channel, postDayLabel }))}*`,
-    '',
-    `*${escapeSlack(idea.title)}*`,
-    `_${escapeSlack(brief.intro)}_`,
-    '',
-    `*An angle to react to:* ${escapeSlack(brief.angle)}`,
-  ];
-  if (isText(brief.whyNow)) {
-    const source = idea.sourceUrl ? ` <${idea.sourceUrl}|Source>` : '';
-    lines.push(`*Why now:* ${escapeSlack(brief.whyNow)}${source}`);
-  }
+/** The brief as plain text, for the dry-run log. */
+export function toBriefText(brief, { idea, channel, postDayLabel }) {
+  const lines = [briefHeadline(brief, { channel, postDayLabel }), '', idea.title, brief.intro, '', `An angle to react to: ${brief.angle}`];
+  if (isText(brief.whyNow)) lines.push(`Why now: ${brief.whyNow}${idea.sourceUrl ? ` (${idea.sourceUrl})` : ''}`);
   brief.sections.forEach((s, i) => {
-    lines.push('', `*${i + 1}. ${escapeSlack(s.heading)}* (about ${s.words} words)`);
-    for (const q of s.questions) lines.push(`• ${escapeSlack(q)}`);
+    lines.push('', `${i + 1}. ${s.heading} (about ${s.words} words)`);
+    for (const q of s.questions) lines.push(`• ${q}`);
   });
-  if (notionUrl) lines.push('', `<${notionUrl}|Start writing in Notion →>`);
   return lines.join('\n');
 }
 

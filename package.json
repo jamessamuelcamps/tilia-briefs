@@ -2,7 +2,7 @@
   "name": "tilia-briefs",
   "private": true,
   "type": "module",
-  "description": "Weekly interview-style writing briefs, delivered to Slack with a Notion draft page.",
+  "description": "Weekly interview-style writing briefs, delivered as Notion pages.",
   "engines": {
     "node": ">=22.9"
   },

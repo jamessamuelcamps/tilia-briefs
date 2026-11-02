@@ -13,7 +13,7 @@ on:
         options: [personal, personal-short, make]
         default: personal
       dry_run:
-        description: Print the brief in the log without touching Notion or Slack
+        description: Print the brief in the log without touching Notion
         type: boolean
         default: true
 
@@ -26,7 +26,6 @@ jobs:
       NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
       NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
       NOTION_USER_ID: ${{ secrets.NOTION_USER_ID }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

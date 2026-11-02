@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { toNotionBlocks, toSlackText, validateBrief, validateResearch } from '../scripts/lib/brief.mjs';
+import { toBriefText, toNotionBlocks, validateBrief, validateResearch } from '../scripts/lib/brief.mjs';
 import { extractJson } from '../scripts/lib/claude.mjs';
 import { addDays, formatDay, londonOffsetHours } from '../scripts/lib/dates.mjs';
 
@@ -67,20 +67,14 @@ test('research ideas need real links and no duplicates', () => {
   assert.throws(() => validateResearch({ ideas: Array(4).fill(ok.ideas[0]) }, opts), /At most 3/);
 });
 
-test('Slack text escapes control characters and links to Notion', () => {
+test('the dry-run text has the headline, angle and numbered sections', () => {
   const brief = goodBrief();
   brief.angle = 'Research < shipping & that is fine';
-  const text = toSlackText(brief, {
-    idea: { title: 'Tools & tricks', sourceUrl: null },
-    channel,
-    postDayLabel: 'Tuesday 6 October',
-    notionUrl: 'https://notion.so/page',
-  });
-  assert.match(text, /^\*About 300 words for your LinkedIn, posting Tuesday 6 October at 08:45\.\*/);
-  assert.match(text, /Research &lt; shipping &amp; that is fine/);
-  assert.match(text, /\*Tools &amp; tricks\*/);
-  assert.match(text, /<https:\/\/notion\.so\/page\|Start writing in Notion →>/);
-  assert.match(text, /\*1\. Your take\* \(about 60 words\)/);
+  const text = toBriefText(brief, { idea: { title: 'Tools & tricks', sourceUrl: null }, channel, postDayLabel: 'Tuesday 6 October' });
+  assert.match(text, /^About 300 words for your LinkedIn, posting Tuesday 6 October at 08:45\./);
+  assert.match(text, /An angle to react to: Research < shipping & that is fine/);
+  assert.match(text, /\nTools & tricks\n/);
+  assert.match(text, /1\. Your take \(about 60 words\)/);
 });
 
 test('Notion blocks give each section a heading, prompt and space to write', () => {

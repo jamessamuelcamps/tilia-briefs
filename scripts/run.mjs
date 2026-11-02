@@ -7,7 +7,7 @@ import { addDays, formatDay, londonOffsetHours, londonParts } from './lib/dates.
 import { appendBlocks, createIdea, markBriefed, queryIdeas, BRIEFED_ONWARDS } from './lib/notion.mjs';
 import { notify, runLink } from './lib/notify.mjs';
 import { fill, read } from './lib/template.mjs';
-import { briefHeadline, toNotionBlocks, toSlackText, validateBrief, validateResearch } from './lib/brief.mjs';
+import { briefHeadline, toBriefText, toNotionBlocks, validateBrief, validateResearch } from './lib/brief.mjs';
 
 const BRIEF_HOUR_UK = 18;
 const MAX_RESEARCH_IDEAS = 3;
@@ -109,7 +109,7 @@ async function brief(key) {
   const context = { idea, channel, postDayLabel, notionUrl: idea.url };
 
   if (dryRun) {
-    console.log(`\n--- ${key} brief (dry run, nothing sent) ---\n\n${toSlackText(result, context)}\n`);
+    console.log(`\n--- ${key} brief (dry run, nothing sent) ---\n\n${toBriefText(result, context)}\n`);
     return;
   }
 

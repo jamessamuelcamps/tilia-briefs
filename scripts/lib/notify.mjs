@@ -1,7 +1,5 @@
-// Tells James something happened. The main route is a Notion comment that @mentions him, which Notion
-// sends to his phone and email. Slack is an optional extra, used only while SLACK_WEBHOOK_URL is set.
+// Tells James something happened: a Notion comment that @mentions him, which Notion sends to his phone and email.
 import { addComment, hubPageId, listComments } from './notion.mjs';
-import { escapeSlack, postToSlack } from './slack.mjs';
 
 // The same crash alert isn't repeated within this window, so a broken run every 30 minutes stays one message.
 const REPEAT_AFTER_HOURS = 12;
@@ -21,10 +19,6 @@ export function toCommentRichText({ title, lines = [], link }, userId) {
   return parts;
 }
 
-export function toSlackText({ title, lines = [], link }) {
-  return [`*${escapeSlack(title)}*`, ...lines.map(escapeSlack), ...(link ? [`<${link.url}|${escapeSlack(link.label)}>`] : [])].join('\n');
-}
-
 const commentText = (comment) => comment.rich_text.map((t) => t.plain_text).join('');
 
 /** True if a comment with the same title went up recently, so a repeated failure isn't announced again. */
@@ -33,16 +27,10 @@ export function isRepeat(comments, title, now = Date.now()) {
   return comments.some((c) => Date.parse(c.created_time) >= since && commentText(c).includes(title));
 }
 
-/**
- * Notifies on a page, or on the Tilia Briefs page above the database when pageId is null (for crashes).
- * Throws only if every route failed.
- */
+/** Comments on a page, or on the Tilia Briefs page above the database when pageId is null (for crashes). */
 export async function notify(pageId, message, { dedupe = false } = {}) {
   const userId = process.env.NOTION_USER_ID;
   if (!userId) console.warn('NOTION_USER_ID is not set, so the comment will not mention you or send a notification.');
-  const errors = [];
-  let sent = false;
-
   try {
     const target = pageId ?? (await hubPageId());
     if (dedupe && isRepeat(await listComments(target), message.title)) {
@@ -50,22 +38,10 @@ export async function notify(pageId, message, { dedupe = false } = {}) {
       return;
     }
     await addComment({ page_id: target }, toCommentRichText(message, userId));
-    sent = true;
   } catch (error) {
-    errors.push(error);
+    console.error(`Notification failed: ${error.message}`);
+    throw error;
   }
-
-  if (process.env.SLACK_WEBHOOK_URL) {
-    try {
-      await postToSlack(toSlackText(message));
-      sent = true;
-    } catch (error) {
-      errors.push(error);
-    }
-  }
-
-  for (const error of errors) console.error(`Notification failed: ${error.message}`);
-  if (!sent) throw errors[0] ?? new Error('No notification route is set up');
 }
 
 /** The Actions run, for crash messages. Null locally. */
