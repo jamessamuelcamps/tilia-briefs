@@ -123,7 +123,7 @@ async function publishImage(item, blocks, { dryRun }) {
 
   const repo = process.env.GITHUB_REPOSITORY ?? 'jamessamuelcamps/tilia-briefs';
   const ext = plan.action === 'image' && /\.jpe?g(\?|$)/i.test(imageUrl(plan.block)) ? 'jpg' : 'png';
-  const path = `media/${slugify(item.title)}-${item.id.replace(/-/g, '').slice(0, 8)}.${ext}`;
+  const path = `media/${slugify(item.title)}-${item.id.replace(/-/g, '').slice(-8)}.${ext}`;
   const url = `https://raw.githubusercontent.com/${repo}/main/${path}`;
   if (dryRun) return url;
   await commitFile({ repo, branch: 'main', path, content: png, message: `media: image for "${item.title}"`, token: requireEnv('GITHUB_TOKEN') });
