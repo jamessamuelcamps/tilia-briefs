@@ -8,7 +8,7 @@ Once a month you open two pull requests for James to review: one new search page
 - `tilia/docs/done/seo-pages-design.md`, `tilia/docs/pricing.md`, `tilia/docs/roadmap.md`.
 - `ux-research-templates/README.md`, `ux-research-templates/docs/markdown-format.md` and the existing files in `ux-research-templates/templates/`.
 
-House rules: British English. **No em dashes** in any copy (`npm run check:copy` enforces it). Short, plain sentences. Every claim about tilia must be true to the code and docs. tilia's own prices come from code, never typed into copy. Anything about a competitor lives only in `client/src/data/competitors.js` with an official source. No feature tables.
+House rules: British English. **No em dashes** in any copy (`npm run check:copy` enforces it). Short, plain sentences. Every claim about tilia must be true to the code and docs, and only about features people on the Free or Pro plan can use today (leave out anything `docs/roadmap.md` or `pricing.md` calls admin-only, behind a flag or not yet launched). tilia's own prices come from code, never typed into copy. Anything about a competitor lives only in `client/src/data/competitors.js` with an official source. No feature tables.
 
 ## 1. One search page (tilia-labs/tilia)
 

@@ -20,6 +20,7 @@ In short: async, unmoderated research (tree test, card sort, survey, preference,
 
 - British English. **No em dashes** (use a comma, colon, full stop or brackets). Short, plain sentences. No hype words ("revolutionary", "game-changing", "supercharge"), no emoji walls, at most three hashtags.
 - True to the product. If a fact isn't in the files above, don't use it. Never invent customers, numbers, quotes or testimonials.
+- Only features people can use today. Something in the code or git log isn't launched until people on the Free or Pro plan can use it. If `tilia/docs/roadmap.md` or `pricing.md` calls it admin-only, behind a flag or not yet launched, leave it out of every post, outreach message and listing. Transcripts and Projects are admin-only until their launch (see "Launch week" below).
 - Helpful first. A draft should be worth reading even for someone who never signs up.
 - Links to tilialabs.io carry UTM tags: `?utm_source=<linkedin|reddit|email|newsletter|directory>&utm_medium=<social|community|outreach|listing>&utm_campaign=<short-slug>`.
 - **Personal data:** only use what a person has made public for professional reasons (a LinkedIn post, a public thread, a company page, a job ad). No personal email addresses unless published for business contact. Never store sensitive details. Never write any of it into a repo; it goes only into Notion.
@@ -57,6 +58,13 @@ Type `LinkedIn post`, Channel `Tilia LinkedIn`. Due: this week's Tuesday, Wednes
 - **Method explainer:** what a tree test, card sort or first-click test tells you, when to use it, from `methodPages.js`.
 
 Open with something specific (a situation, a number from the product's own files, a question practitioners argue about), not "Excited to share". End with one clear next step and a UTM link.
+
+**Launch week: the run on Monday 23 November 2026 only.** James plans to launch Transcripts and Projects (in the Repository) on Pro that week. First check `tilia/docs/roadmap.md`: if it still calls them admin-only, draft the usual three posts and say so at the top of the digest. If they're on Pro, the three posts this week are the launch instead of the usual pillars:
+- **Launch post:** what Transcripts and Projects do, the problem they solve (from `tilia/docs/transcripts-in-repository-design.md` and the code), and that they're on Pro. Use a `screenshot` card if there's a public page showing them, otherwise `headline`. In its note, tell James that approved posts go into the next free Buffer slots (Wednesday to Friday), so he should move this one to Tuesday 24 November in Buffer if he wants it out that day.
+- **Feature in 60 seconds: Transcripts:** importing a transcript, the AI summary and suggested quotes, keeping or discarding them as you read.
+- **Feature in 60 seconds: Projects:** grouping transcripts, finding themes across them, saving a theme with its quotes, sharing a project's report by link.
+
+The image/no-image comparison doesn't apply this week: give all three a card. Friday 27 November is Black Friday, so suggest in the digest that James holds the third post until the following week. After this run, these launch features are fair game for the usual pillars.
 
 **Image card.** Under the `Image` heading, pick the card that fits the post and fill its fields. The watcher turns it into a 1080 x 1350 image on the page within half an hour, so James sees it before approving. Text on the card follows the house rules and must be true to the files above; never invent a number for a stat card. Stay within the character limits, or the card isn't made:
 
