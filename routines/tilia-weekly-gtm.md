@@ -66,23 +66,23 @@ Open with something specific (a situation, a number from the product's own files
 
 The image/no-image comparison doesn't apply this week: give all three a card. Friday 27 November is Black Friday, so suggest in the digest that James holds the third post until the following week. After this run, these launch features are fair game for the usual pillars.
 
-**Image card.** Under the `Image` heading, pick the card that fits the post and fill its fields. The watcher turns it into a 1080 x 1350 image on the page within half an hour, so James sees it before approving. Text on the card follows the house rules and must be true to the files above; never invent a number for a stat card. Stay within the character limits, or the card isn't made:
+**Image card.** Under the `Image` heading, pick a card and fill its fields. **Prefer `screenshot`**: James wants the product UI on as many posts as possible. Look for a public page on https://tilialabs.io that shows what the post is about (the feature, a method page from `methodPages.js`, a comparison page from `competitors.js`, pricing, or the home page for a general point; the public routes are in `tilia/client/src/entry-server.jsx`), and write a caption that ties it to the post. Only use another card when no live page fits, and say why in the note. The watcher turns it into a 1080 x 1350 image on the page within half an hour, so James sees it before approving. Text on the card follows the house rules and must be true to the files above; never invent a number for a stat card. Stay within the character limits, or the card isn't made:
 
 | card | fields (characters) | use it for |
 | --- | --- | --- |
-| `stat` | `stat` (6), `label` (80), `source` (60, optional) | one number from the product's own files or a cited source: put only the number in `stat` (`£49`, `6`, `73%`) and the words in `label` |
-| `mistake` | `mistake` (80), `fix` (80) | the research mistake and fix pillar |
-| `headline` | `headline` (50), `support` (110, optional) | an opinion, a method explainer or a comparison |
-| `template` | `type` (20, the method, e.g. `Tree test`), `name` (40), `github` (30, optional, defaults to "Free on GitHub") | a template drop |
-| `screenshot` | `caption` (40), `url` (a page on https://tilialabs.io) | a feature, shown on the live site |
+| `screenshot` | `caption` (40), `url` (a page on https://tilialabs.io) | the default: the live page that shows the feature, method or comparison the post is about |
+| `template` | `type` (20, the method, e.g. `Tree test`), `name` (40), `github` (30, optional, defaults to "Free on GitHub") | a template drop (templates live on GitHub, not tilialabs.io) |
+| `stat` | `stat` (6), `label` (80), `source` (60, optional) | only when no page fits: one number from the product's own files or a cited source: put only the number in `stat` (`£49`, `6`, `73%`) and the words in `label` |
+| `mistake` | `mistake` (80), `fix` (80) | only when no page fits: a research mistake and its fix |
+| `headline` | `headline` (50), `support` (110, optional) | only when no page fits: an opinion or a point the site doesn't show |
 | `none` | | a post that works better as text |
 
 For example:
 
 ```
-card: mistake
-mistake: Testing your navigation with labels you wrote yourself
-fix: Run an open card sort first and use the words people group by
+card: screenshot
+caption: What a tree test shows you
+url: https://tilialabs.io/tree-test
 ```
 
 The card should add something the first line of the post doesn't already say, not repeat it. Until the end of November 2026, make the Wednesday post `card: none` and give the other two an image, so James can compare them in Buffer's analytics.
