@@ -66,11 +66,26 @@ Open with something specific (a situation, a number from the product's own files
 
 The image/no-image comparison doesn't apply this week: give all three a card. Friday 27 November is Black Friday, so suggest in the digest that James holds the third post until the following week. After this run, these launch features are fair game for the usual pillars.
 
-**Image card.** Under the `Image` heading, pick a card and fill its fields. **Prefer `screenshot`**: James wants the product UI on as many posts as possible. Look for a public page on https://tilialabs.io that shows what the post is about (the feature, a method page from `methodPages.js`, a comparison page from `competitors.js`, pricing, or the home page for a general point; the public routes are in `tilia/client/src/entry-server.jsx`), and write a caption that ties it to the post. Only use another card when no live page fits, and say why in the note. The watcher turns it into a 1080 x 1350 image on the page within half an hour, so James sees it before approving. Text on the card follows the house rules and must be true to the files above; never invent a number for a stat card. Stay within the character limits, or the card isn't made:
+**Image card.** Under the `Image` heading, pick a card and fill its fields. **Prefer `screenshot`, and prefer the product itself over the marketing site**: James wants the real app UI on as many posts as possible. In order:
+1. `report: <method>`: the shared results report of that method's study in tilia's demo account (seeded by `tilia/server/scripts/seed-demo.js`, with made-up data), e.g. the card sort's dendrogram and similarity matrix, or the tree test's success rates and findings. Use it for any post about a method, a research mistake, results or analysis. The methods are `tree test`, `card sort`, `first-click`, `survey` and `preference test`.
+2. `url:` a public page on https://tilialabs.io, only when no demo report fits: a comparison page from `competitors.js`, pricing, or a feature the reports don't show (the public routes are in `tilia/client/src/entry-server.jsx`).
+
+**Always add `show:`** to zoom in on one part of the screen. A whole report or page is too small to read on LinkedIn. `show:` is the exact text of a heading or label on the page, and the card shows the box around it, large. Pick the one part that proves the post's point, so the caption and the screen tell one story. These work well:
+- `tree test`: `Task 1`, `Task 2` or `Task 3` (the question, success split, success rate and the paths people took), or a theme title from the summary, e.g. `Docs vs Support confusion`.
+- `card sort`: `Cluster dendrogram` (which cards people grouped together). Avoid `Similarity matrix`, which is cut off at this size.
+- `survey`: a question's exact text, e.g. `How likely are you to recommend this tool to another support team?`, or a theme title.
+- `first-click`: `Click heatmap` (where people clicked on a landing page).
+
+Other text works if it's on the page exactly as written (or is an image's alt text): task questions, theme titles and survey questions are in `tilia/server/scripts/seed-demo.js`. A small part, like one theme, shows smaller than a chart, so prefer a task, chart or question. If the text isn't found, no card is made and the page gets a note saying why.
+
+**Relevance comes first.** Use a screenshot only when the screen itself answers or proves the post's point: someone who sees only the image and caption should get the idea. If the best screen is only loosely related, use a text card instead. In particular, a post about choosing between two things (open or closed card sort, tree test or card sort, tilia or another tool) gets a `compare` card: a headline that is the question the post answers, then each option and when to use it.
+
+Write a caption that ties the screen to the post. Only use another card when neither fits, and say why in the note. The watcher turns it into a 1080 x 1350 image on the page within half an hour, so James sees it before approving. Text on the card follows the house rules and must be true to the files above; never invent a number for a stat card. Stay within the character limits, or the card isn't made:
 
 | card | fields (characters) | use it for |
 | --- | --- | --- |
-| `screenshot` | `caption` (40), `url` (a page on https://tilialabs.io) | the default: the live page that shows the feature, method or comparison the post is about |
+| `screenshot` | `caption` (40), either `report` (a demo study's method) or `url` (a page on https://tilialabs.io), and `show` (80, the text to zoom in on) | the default: the app screen, or failing that the live page, that shows what the post is about |
+| `compare` | `headline` (50), `left` (20), `left text` (90), `right` (20), `right text` (90) | a choice between two options: each side says what it is and when to use it |
 | `template` | `type` (20, the method, e.g. `Tree test`), `name` (40), `github` (30, optional, defaults to "Free on GitHub") | a template drop (templates live on GitHub, not tilialabs.io) |
 | `stat` | `stat` (6), `label` (80), `source` (60, optional) | only when no page fits: one number from the product's own files or a cited source: put only the number in `stat` (`£49`, `6`, `73%`) and the words in `label` |
 | `mistake` | `mistake` (80), `fix` (80) | only when no page fits: a research mistake and its fix |
@@ -81,8 +96,9 @@ For example:
 
 ```
 card: screenshot
-caption: What a tree test shows you
-url: https://tilialabs.io/tree-test
+caption: Which cards people put together
+report: card sort
+show: Cluster dendrogram
 ```
 
 The card should add something the first line of the post doesn't already say, not repeat it. Until the end of November 2026, make the Wednesday post `card: none` and give the other two an image, so James can compare them in Buffer's analytics.

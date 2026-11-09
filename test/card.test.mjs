@@ -42,6 +42,7 @@ test('every card type validates with its required fields', () => {
     stat: { stat: '73%', label: 'found it first time' },
     mistake: { mistake: 'a', fix: 'b' },
     headline: { headline: 'Labels, not users' },
+    compare: { headline: 'Open or closed?', left: 'Open', 'left text': 'a', right: 'Closed', 'right text': 'b' },
     template: { type: 'Tree test', name: 'SaaS settings' },
     screenshot: { caption: 'Every first click', url: 'https://tilialabs.io/pricing' },
   };
@@ -59,6 +60,23 @@ test('a wrong spec is refused with a reason', () => {
   assert.throws(() => parseSpec(['card: headline', 'just some text']), /isn't a "key: value" line/);
   assert.throws(() => validateSpec({ card: 'screenshot', caption: 'x', url: 'https://example.com' }), /only show pages on https:\/\/tilialabs.io/);
   assert.throws(() => validateSpec({ card: 'screenshot', caption: 'x', url: 'tilialabs.io' }), /isn't a URL/);
+  assert.throws(() => validateSpec({ card: 'screenshot', caption: 'x' }), /needs one of "url:"/);
+  assert.throws(() => validateSpec({ card: 'screenshot', caption: 'x', url: 'https://tilialabs.io/', report: 'card sort' }), /not both/);
+  assert.throws(() => validateSpec({ card: 'screenshot', caption: 'x', report: 'interviews' }), /isn't a demo study/);
+});
+
+test('a screenshot card can show a demo study report instead of a page', () => {
+  assert.deepEqual(validateSpec({ card: 'screenshot', caption: 'x', report: 'Card sort' }), { card: 'screenshot', caption: 'x', report: 'card sort' });
+  assert.deepEqual(validateSpec({ card: 'screenshot', caption: 'x', report: 'tree test', show: 'Task 3' }), { card: 'screenshot', caption: 'x', report: 'tree test', show: 'Task 3' });
+});
+
+test('a zoomed screenshot is never shown bigger than its own pixels', async () => {
+  const png = Buffer.alloc(24);
+  png.writeUInt32BE(744, 16);
+  png.writeUInt32BE(570, 20);
+  const html = await cardHtml({ card: 'screenshot', caption: 'x', report: 'tree test', show: 'Task 3' }, { screenshot: png });
+  assert.match(html, /class="frame zoom"/);
+  assert.match(html, /max-width:min\(100%,744px\);max-height:min\(100%,570px\)/);
 });
 
 test('card text is escaped', async () => {
