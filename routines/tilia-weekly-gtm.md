@@ -19,7 +19,7 @@ In short: async, unmoderated research (tree test, card sort, survey, preference,
 ## House rules for every draft
 
 - British English. **No em dashes** (use a comma, colon, full stop or brackets). Short, plain sentences. No hype words ("revolutionary", "game-changing", "supercharge"), no emoji walls, at most three hashtags.
-- True to the product. If a fact isn't in the files above, don't use it. Never invent customers, numbers, quotes or testimonials.
+- True to the product. If a fact isn't in the files above, don't use it. Never invent customers, numbers, quotes or testimonials. The one exception is the "In the conversation" post (below), which may use facts from a source you opened, named in the post and linked under the divider. Even there, anything about tilia comes from the files above, and anything about a competitor's product comes only from `competitors.js`.
 - Only features people can use today. Something in the code or git log isn't launched until people on the Free or Pro plan can use it. If `tilia/docs/roadmap.md` or `pricing.md` calls it admin-only, behind a flag or not yet launched, leave it out of every post, outreach message and listing. Transcripts and Projects are admin-only until their launch (see "Launch week" below).
 - Helpful first. A draft should be worth reading even for someone who never signs up.
 - Links to tilialabs.io carry UTM tags: `?utm_source=<linkedin|reddit|email|newsletter|directory>&utm_medium=<social|community|outreach|listing>&utm_campaign=<short-slug>`.
@@ -44,7 +44,7 @@ James's Notion user is `user://782c3151-92a2-4129-a28f-710dc5c42ad7`.
 ### 1. Learn from the last four weeks
 
 Query the database for rows with Week in the last 28 days. Note:
-- What James **approved, sent or rejected**, and anything in **Feedback** or in comments on those pages (use the comments tool). Follow his feedback this week, and say in the digest what you changed because of it.
+- What James **approved, sent or rejected**, and anything in **Feedback** or in comments on those pages (use the comments tool). Follow his feedback this week, and say in the digest what you changed because of it. Note any row he rejected with Feedback empty: the digest asks him why.
 - Which content pillars were used, so this week rotates.
 - Every **Target URL** already in the database, so you never contact the same person or thread twice.
 
@@ -56,8 +56,9 @@ Type `LinkedIn post`, Channel `Tilia LinkedIn`. Due: this week's Tuesday, Wednes
 - **Template drop:** one template from `ux-research-templates`, what it's for, the GitHub link.
 - **Honest comparison:** from `competitors.js`, including when the other tool is the better choice. Costs only as stated there.
 - **Method explainer:** what a tree test, card sort or first-click test tells you, when to use it, from `methodPages.js`.
+- **In the conversation:** a take on something UX researchers, designers or product people are discussing now (from the last 14 days): a Hacker News thread, an article, a report, a tool's public announcement. Search the web for it; the Hacker News queries in step 3 are a good start. Say what happened in a line, credit the source by name, then give tilia's point of view: agree, push back, or add what it means for a small team. Never pile on a person or a competitor. Put the source URL and its date under the divider. At most one a week, and skip it if nothing recent is worth a view.
 
-Open with something specific (a situation, a number from the product's own files, a question practitioners argue about), not "Excited to share". End with one clear next step and a UTM link.
+LinkedIn shows about the first 200 characters (two or three lines) before "see more", so the post's point has to land there. Open with something specific (a situation, a number from the product's own files, a question practitioners argue about), not "Excited to share" or a vague teaser. End with one clear next step and a UTM link.
 
 **Launch week: the run on Monday 23 November 2026 only.** James plans to launch Transcripts and Projects (in the Repository) on Pro that week. First check `tilia/docs/roadmap.md`: if it still calls them admin-only, draft the usual three posts and say so at the top of the digest. If they're on Pro, the three posts this week are the launch instead of the usual pillars:
 - **Launch post:** what Transcripts and Projects do, the problem they solve (from `tilia/docs/transcripts-in-repository-design.md` and the code), and that they're on Pro. Use a `screenshot` card if there's a public page showing them, otherwise `headline`. In its note, tell James that approved posts go into the next free Buffer slots (Wednesday to Friday), so he should move this one to Tuesday 24 November in Buffer if he wants it out that day.
@@ -151,6 +152,7 @@ Create one row: Type `Digest`, Channel left empty, Name `Week of <Monday date>`,
 - **To approve:** links to every row you made this run, grouped by Type, with the time each takes (posts: 10 minutes for all three; outreach: about 5 minutes each).
 - **Still waiting:** rows at Needs approval from earlier weeks.
 - **Last week:** counts of Scheduled, Sent and Rejected, and what you changed because of his feedback.
+- **Why not?** For each row he rejected with no Feedback, link it and ask in one line what was wrong (for example the topic, the angle, the tone or the target), so next week can steer away from it. Leave this out if there are none.
 - **One bigger idea:** a single suggestion for the coming month, such as a free tool, a talk or a partnership worth chasing, with a line on why.
 
 Then add a page comment on the digest that mentions James and says it's ready, so he gets a notification.
