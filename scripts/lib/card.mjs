@@ -343,7 +343,7 @@ const BODIES = {
         <p class="headline">${words(s.headline)}</p>
         ${s.support ? `<p class="support">${escape(s.support)}</p>` : ''}
       </div>
-      ${frame(screens[''], s.show || s.visual || s.demo || s.app)}
+      ${frame(screens[''], s.show || s.visual || s.demo || s.app, s.demo || s.app)}
     </div>`,
   template: (s, screens) => `
     <p class="pill">Free download</p>
@@ -352,7 +352,7 @@ const BODIES = {
         <p class="support">${escape(s.type)} template</p>
         <p class="title">${words(s.name)}</p>
       </div>
-      ${frame(screens[''], s.show || s.visual || s.template || s.demo || s.app)}
+      ${frame(screens[''], s.show || s.visual || s.template || s.demo || s.app, s.demo || s.app)}
     </div>`,
 };
 
@@ -363,12 +363,13 @@ const ICONS = {
 };
 
 /** A screenshot frame for this PNG (zoomed in if it's one part: a `show` or a `visual`), or nothing without one. */
-function frame(png, zoomed) {
+function frame(png, zoomed, bleed = false) {
   if (!png) return '';
   // A zoomed part fills the frame's width but is never shown bigger than its own pixels, so a small one stays sharp
   // (the width is in the PNG header). A part taller than the frame shows its top, which is where the heading is.
-  const size = zoomed ? `max-width:min(100%,${png.readUInt32BE(16)}px)` : '';
-  return `<div class="frame${zoomed ? ' zoom' : ''}"><img src="data:image/png;base64,${png.toString('base64')}" style="${size}" alt=""></div>`;
+  // A demo or app screen fills the frame edge to edge, as a window onto the app, rather than a box inside a box.
+  const size = zoomed && !bleed ? `max-width:min(100%,${png.readUInt32BE(16)}px)` : '';
+  return `<div class="frame${zoomed ? ' zoom' : ''}${bleed ? ' bleed' : ''}"><img src="data:image/png;base64,${png.toString('base64')}" style="${size}" alt=""></div>`;
 }
 
 /** The card as a self-contained HTML page. `screens` holds a PNG for each screen the card shows, by field prefix ('' for one screen). */
@@ -427,6 +428,7 @@ html, body { width: ${WIDTH}px; height: ${HEIGHT}px; overflow: hidden; }
 .frame img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
 .frame.zoom { position: relative; background: #faf7f2; padding: 40px 40px 0; display: flex; flex-direction: column; align-items: center; justify-content: safe center; }
 .frame.zoom img { flex: none; width: 100%; height: auto; }
+.frame.bleed { padding: 0; justify-content: flex-start; }
 .frame.picture img { width: 100%; height: 100%; object-fit: contain; }
 .frame.zoom::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: linear-gradient(rgba(250, 247, 242, 0), #faf7f2); }
 </style></head><body>
@@ -719,8 +721,23 @@ export async function screenshotDemo(name, { dir }) {
     await openAsDemo(send, '/explore', title, { width: 1200, scale: 3, reduced: true });
     await press(send, { text: title });
     await delay(1000);
-    // The demo's stage is the labelled picture in the dialog that opened, which comes last in the page.
-    const expression = `(() => { const s = [...document.querySelectorAll('[role=img][aria-label]')].at(-1); if (!s) return null; const r = s.getBoundingClientRect(); return { x: r.left + scrollX, y: r.top + scrollY, width: r.width, height: r.height }; })()`;
+    // The demo's stage is the labelled picture in the dialog that opened, which comes last in the page. Everything
+    // around it goes see-through, or the dialog's dark backdrop shows in the stage's rounded corners.
+    await send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
+    const expression = `(() => {
+      const s = [...document.querySelectorAll('[role=img][aria-label]')].at(-1);
+      if (!s) return null;
+      const style = document.createElement('style');
+      style.textContent = '::backdrop { background: transparent !important; }';
+      document.head.append(style);
+      for (const e of document.querySelectorAll('body *')) {
+        if (e.contains(s)) e.style.setProperty('background', 'transparent', 'important');
+        else if (!s.contains(e)) e.style.setProperty('visibility', 'hidden', 'important');
+      }
+      for (const e of [document.documentElement, document.body]) e.style.setProperty('background', 'transparent', 'important');
+      const r = s.getBoundingClientRect();
+      return { x: r.left + scrollX, y: r.top + scrollY, width: r.width, height: r.height };
+    })()`;
     const clip = (await send('Runtime.evaluate', { expression, returnByValue: true })).result.value;
     assert(clip, `The ${title} demo didn't open`);
     const { data } = await send('Page.captureScreenshot', { format: 'png', clip: { ...clip, scale: 1 }, captureBeyondViewport: true });
@@ -761,7 +778,8 @@ export async function screenshotApp(name, { dir }) {
       // Start just right of the sidebar (the narrow block holding "Explore tilia"), so its edge isn't in the picture.
       const sidebar = [...document.querySelectorAll('aside, nav, div')].filter((e) => e.textContent.includes('Explore tilia') && e.getBoundingClientRect().width < 320).pop();
       const left = Math.max(sidebar ? sidebar.getBoundingClientRect().right + 1 : 0, box.left - 24);
-      return { x: left, y: top, width: Math.min(innerWidth - left, box.right + 24 - left), height: ${height ?? 'innerHeight - top'} };
+      // Exactly the column: its edges (a border, a shadow) would show as stray lines in the picture.
+      return { x: Math.max(left, box.left), y: top, width: Math.min(innerWidth, box.right) - Math.max(left, box.left), height: ${height ?? 'innerHeight - top'} };
     })()`;
     const clip = (await send('Runtime.evaluate', { expression, returnByValue: true })).result.value;
     assert(clip, `Couldn't find "${from}" on ${path}`);
