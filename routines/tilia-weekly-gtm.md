@@ -77,7 +77,7 @@ The image/no-image comparison doesn't apply this week: give all three a card. Fr
 | one number that is the point | `stat` |
 | anything else: a method, results, a feature, an opinion | `headline` |
 
-**Add a screen from the product wherever it proves the point** (`headline`, `template` and both sides of `compare` have room for one): James wants the real app UI on as many posts as possible. In order:
+**Add a screen from the product wherever it proves the point** (`headline` and `template` have room for one; `compare` is different, see below): James wants the real app UI on as many posts as possible. In order:
 1. `report: <method>`: the shared results report of that method's study in tilia's demo account (seeded by `tilia/server/scripts/seed-demo.js`, with made-up data), e.g. the card sort's dendrogram, or the tree test's success rates and paths. The methods are `tree test`, `card sort`, `first-click`, `survey` and `preference test`.
 2. `url:` a public page on https://tilialabs.io, only when no demo report fits: a comparison page from `competitors.js`, pricing, or a feature the reports don't show (the public routes are in `tilia/client/src/entry-server.jsx`).
 
@@ -89,14 +89,16 @@ The image/no-image comparison doesn't apply this week: give all three a card. Fr
 
 Other text works if it's on the page exactly as written (or is an image's alt text): task questions, theme titles and survey questions are in `tilia/server/scripts/seed-demo.js`. If the text isn't found, no card is made and the page gets a note saying why.
 
-**Relevance comes first.** Add a screen only when it answers or proves the post's point: someone who sees only the card should get the idea. If the best screen is only loosely related, leave it out and the card is text only; say why in the note. A `compare` card has a screen on both sides or neither, and its screens are small, so give it screens only when the two are clearly different at a glance (e.g. a dendrogram next to a tree test task).
+**Relevance comes first.** Add a screen only when it answers or proves the post's point: someone who sees only the card should get the idea. If the best screen is only loosely related, leave it out and the card is text only; say why in the note.
+
+**A `compare` card compares the tools and how you use them, not page layouts.** Its sides are small, so each shows one piece of the method: a still picture from that method's page on tilialabs.io, set with `left visual:` and `right visual:` (both sides or neither). The pictures are `<method> task` (what a participant does: the tree with a task, cards being dragged into groups, the click on a wireframe, the five-second countdown, two designs to choose between, a survey question) and `<method> results` (what the researcher gets back), for `tree test`, `card sort`, `first-click`, `five-second`, `preference test` and `survey`, plus `card sort dendrogram`. Compare like with like: two tasks to show how each method works for a participant, or two results to show what each tells you. When the two options are the same method (open or closed card sort), there's no picture of the difference, so leave the visuals out.
 
 The watcher turns it into a 1080 x 1350 image on the page within half an hour, so James sees it before approving. Text on the card follows the house rules and must be true to the files above; never invent a number for a stat card. Stay within the character limits, or the card isn't made:
 
 | card | fields (characters) |
 | --- | --- |
-| `headline` | `headline` (50, the point in a few words), `support` (110, optional), and a screen: `report` or `url`, plus `show` (80) |
-| `compare` | `headline` (50, the question the post answers), `left` (20), `left text` (90, what it is and when to use it), `right` (20), `right text` (90), and optionally a screen on each side: `left report` or `left url` plus `left show`, and the same for `right` |
+| `headline` | `headline` (50, the point in a few words), `support` (110, optional), and a screen: `report` or `url`, plus `show` (80); or a `visual` as for `compare` |
+| `compare` | `headline` (50, the question the post answers), `left` (20), `left text` (90, what it is and when to use it), `right` (20), `right text` (90), and optionally `left visual` and `right visual` (e.g. `card sort task`, `tree test task`) |
 | `mistake` | `title` (50, what the post is about, e.g. `Tree testing a navigation you guessed`), `mistake` (80), `fix` (80) |
 | `template` | `type` (20, the method, e.g. `Tree test`), `name` (40), and optionally a screen as for `headline` |
 | `stat` | `stat` (6), `label` (80), `source` (60, optional): put only the number in `stat` (`£49`, `6`, `73%`) and the words in `label`; from the product's own files or a cited source |

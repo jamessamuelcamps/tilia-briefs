@@ -71,12 +71,16 @@ test('headline, template and compare cards can show demo study reports', () => {
   assert.deepEqual(validateSpec({ card: 'headline', headline: 'x', report: 'Card sort' }), { card: 'headline', headline: 'x', report: 'card sort' });
   const template = { card: 'template', type: 'Tree test', name: 'y', report: 'tree test', show: 'Task 1' };
   assert.deepEqual(validateSpec(template), template);
-  const both = { ...compare, 'left report': 'Card sort', 'left show': 'Cluster dendrogram', 'right report': 'tree test' };
-  assert.deepEqual(validateSpec(both), { ...both, 'left report': 'card sort' });
+  assert.deepEqual(validateSpec({ card: 'headline', headline: 'x', visual: 'Survey  Task' }), { card: 'headline', headline: 'x', visual: 'survey task' });
 });
 
-test('a compare card has a screen on both sides or neither', () => {
-  assert.throws(() => validateSpec({ ...compare, 'left report': 'card sort' }), /both sides or neither/);
+test('a compare card shows a method page picture on both sides or neither, not a page', () => {
+  const both = { ...compare, 'left visual': 'Card sort task', 'right visual': 'tree test task' };
+  assert.deepEqual(validateSpec(both), { ...both, 'left visual': 'card sort task' });
+  assert.throws(() => validateSpec({ ...compare, 'left visual': 'card sort task' }), /both sides or neither/);
+  assert.throws(() => validateSpec({ ...compare, 'left report': 'card sort' }), /doesn't use "left report"/);
+  assert.throws(() => validateSpec({ ...both, 'right visual': 'tree test dendrogram' }), /isn't a method page picture/);
+  assert.throws(() => validateSpec({ card: 'headline', headline: 'x', visual: 'survey task', show: 'Q1' }), /on its own/);
 });
 
 test('a zoomed screen is never shown bigger than its own pixels', async () => {

@@ -22,11 +22,13 @@ const HEIGHT = 1350;
 
 // A screen from the app or site, for the cards with a screenshot frame. `report` (a method) shows the shared results
 // report of that study in tilia's demo account; `url` shows a page on tilialabs.io. `show` zooms in on the boxed part
-// of the page holding that exact text, such as a heading. All optional: without a screen, the card is text only.
+// of the page holding that exact text, such as a heading. `visual` is one of the still pictures on a method page
+// (see METHOD_VISUALS). All optional: without a screen, the card is text only.
 const screenFields = (prefix = '') => ({
   [`${prefix}report`]: { max: 20, optional: true },
   [`${prefix}url`]: { max: 300, optional: true },
   [`${prefix}show`]: { max: 80, optional: true },
+  [`${prefix}visual`]: { max: 30, optional: true },
 });
 
 // Each card's fields, named after the Figma text layers, with the most characters that fit the layout.
@@ -34,10 +36,23 @@ export const CARDS = {
   stat: { stat: 6, label: 80, source: { max: 60, optional: true } },
   mistake: { title: 50, mistake: 80, fix: 80 },
   headline: { headline: 50, support: { max: 110, optional: true }, ...screenFields() },
-  // Two options side by side under a question, e.g. open vs closed card sort, each with its own screen or neither.
-  compare: { headline: 50, left: 20, 'left text': 90, right: 20, 'right text': 90, ...screenFields('left '), ...screenFields('right ') },
+  // Two options side by side under a question, e.g. tree test or card sort. The sides are small, so each shows one
+  // piece of the tool (a method page's picture), not a page: a visual on both sides or neither.
+  compare: { headline: 50, left: 20, 'left text': 90, right: 20, 'right text': 90, 'left visual': { max: 30, optional: true }, 'right visual': { max: 30, optional: true } },
   template: { type: 20, name: 40, ...screenFields() },
 };
+
+// The still pictures on tilialabs.io's method pages (tilia/client/src/components/methods/MethodVisuals.jsx), in the
+// order the page shows them: what a participant sees, what the researcher gets back, then any extra.
+export const METHOD_VISUALS = {
+  'tree test': { path: '/tree-test', pictures: ['task', 'results'] },
+  'card sort': { path: '/card-sort', pictures: ['task', 'results', 'dendrogram'] },
+  'first-click': { path: '/first-click', pictures: ['task', 'results'] },
+  'five-second': { path: '/five-second', pictures: ['task', 'results'] },
+  'preference test': { path: '/preference-test', pictures: ['task', 'results'] },
+  survey: { path: '/survey', pictures: ['task', 'results'] },
+};
+const VISUAL_NAMES = Object.entries(METHOD_VISUALS).flatMap(([method, { pictures }]) => pictures.map((p) => `${method} ${p}`));
 // Where each card can show a screen, as the prefix of its screen fields.
 const SCREEN_SLOTS = { headline: [''], template: [''], compare: ['left ', 'right '] };
 const SCREENSHOT_HOSTS = ['tilialabs.io', 'www.tilialabs.io'];
@@ -135,13 +150,19 @@ export function validateSpec(spec) {
   assert(!unknown.length, `A ${card} card doesn't use ${unknown.map((k) => `"${k}"`).join(', ')}; it takes ${Object.keys(fields).join(', ')}`);
   const slots = SCREEN_SLOTS[card] ?? [];
   const withScreen = slots.filter((prefix) => validateScreen(out, prefix));
-  assert(withScreen.length === 0 || withScreen.length === slots.length, `A ${card} card needs a screen on both sides or neither`);
+  assert(withScreen.length === 0 || withScreen.length === slots.length, `A ${card} card needs a visual on both sides or neither`);
   return out;
 }
 
-/** Checks one screen's fields in place (lower-casing `report`). True if the card shows a screen there. */
+/** Checks one screen's fields in place (lower-casing `report` and `visual`). True if the card shows a screen there. */
 function validateScreen(out, prefix) {
-  const [report, url, show] = ['report', 'url', 'show'].map((k) => `${prefix}${k}`);
+  const [report, url, show, visual] = ['report', 'url', 'show', 'visual'].map((k) => `${prefix}${k}`);
+  if (out[visual]) {
+    assert(!out[url] && !out[report] && !out[show], `Use "${visual}:" on its own, without "${report}:", "${url}:" or "${show}:"`);
+    out[visual] = out[visual].toLowerCase().replace(/\s+/g, ' ');
+    assert(VISUAL_NAMES.includes(out[visual]), `"${visual}: ${out[visual]}" isn't a method page picture; use ${VISUAL_NAMES.join(', ')}`);
+    return true;
+  }
   assert(!(out[url] && out[report]), `Use "${url}:" (a page on tilialabs.io) or "${report}:" (a demo study), not both`);
   if (!out[url] && !out[report]) {
     assert(!out[show], `"${show}:" needs a "${report}:" or "${url}:" line to zoom in on`);
@@ -162,14 +183,23 @@ function validateScreen(out, prefix) {
   return true;
 }
 
-/** The screens a spec asks for: the field prefix, and the report method or URL, plus the text to zoom in on. */
+/** The screens a spec asks for: the field prefix, and the report method or URL, plus the text or picture to zoom in on. */
 function screensFor(spec) {
-  return (SCREEN_SLOTS[spec.card] ?? [])
-    .filter((prefix) => spec[`${prefix}report`] || spec[`${prefix}url`])
-    .map((prefix) => ({ prefix, report: spec[`${prefix}report`], url: spec[`${prefix}url`], show: spec[`${prefix}show`] }));
+  return (SCREEN_SLOTS[spec.card] ?? []).flatMap((prefix) => {
+    const visual = spec[`${prefix}visual`];
+    if (visual) {
+      const [, method, picture] = visual.match(/^(.+) (\w+)$/);
+      const { path, pictures } = METHOD_VISUALS[method];
+      return [{ prefix, url: `${SITE}${path}`, picture: pictures.indexOf(picture) }];
+    }
+    if (!spec[`${prefix}report`] && !spec[`${prefix}url`]) return [];
+    return [{ prefix, report: spec[`${prefix}report`], url: spec[`${prefix}url`], show: spec[`${prefix}show`] }];
+  });
 }
 
 const escape = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+// Big type: escaped, with hyphenated words kept on one line ("five-second", not "five-" then "second").
+const words = (s) => escape(s).replace(/\S+-\S+/g, (w) => `<span style="white-space:nowrap">${w}</span>`);
 const dataUri = async (file, type) => `data:${type};base64,${(await readFile(new URL(file, ROOT))).toString('base64')}`;
 
 const BODIES = {
@@ -181,35 +211,43 @@ const BODIES = {
     </div>`,
   mistake: (s) => `
     <div class="content stack" style="gap:48px">
-      <p class="title">${escape(s.title)}</p>
+      <p class="title">${words(s.title)}</p>
       <div class="block mistake">${ICONS.cross}<div class="stack" style="gap:32px"><p class="block-heading">The mistake</p><p class="block-text">${escape(s.mistake)}</p></div></div>
       <div class="block fix">${ICONS.tick}<div class="stack" style="gap:32px"><p class="block-heading">The fix</p><p class="block-text">${escape(s.fix)}</p></div></div>
     </div>`,
-  compare: (s, screens) => `
+  compare: (s, screens) => {
+    const [left, right] = [screens['left '], screens['right ']];
+    // Both pictures sit in backdrops of the same height, fitted to the taller one at the backdrop's inner width
+    // (400px less 20px padding each side), so the two sides line up.
+    const ratio = (png) => png.readUInt32BE(20) / png.readUInt32BE(16);
+    const height = left && right ? Math.min(420, Math.round(360 * Math.max(ratio(left), ratio(right))) + 40) : 0;
+    const picture = (png) => (png ? `<div class="frame picture" style="height:${height}px"><img src="data:image/png;base64,${png.toString('base64')}" alt=""></div>` : '');
+    return `
     <div class="content stack" style="gap:56px">
-      <p class="headline">${escape(s.headline)}</p>
-      <div class="pair${screens['left '] ? ' with-screens' : ''}">
-        <div class="side left">${frame(screens['left '], s['left show'])}<p class="side-name">${escape(s.left)}</p><p class="side-text">${escape(s['left text'])}</p></div>
-        <div class="side right">${frame(screens['right '], s['right show'])}<p class="side-name">${escape(s.right)}</p><p class="side-text">${escape(s['right text'])}</p></div>
-        <p class="or">or</p>
+      <p class="headline">${words(s.headline)}</p>
+      <div class="pair${height ? ' with-screens' : ''}">
+        <div class="side left">${picture(left)}<p class="side-name">${words(s.left)}</p><p class="side-text">${escape(s['left text'])}</p></div>
+        <div class="side right">${picture(right)}<p class="side-name">${words(s.right)}</p><p class="side-text">${escape(s['right text'])}</p></div>
+        <p class="or" style="${height ? `top:${32 + height / 2}px` : ''}">or</p>
       </div>
-    </div>`,
+    </div>`;
+  },
   headline: (s, screens) => `
     <div class="content stack" style="gap:64px;${screens[''] ? 'height:953px' : ''}">
       <div class="stack" style="gap:24px;width:100%">
-        <p class="headline">${escape(s.headline)}</p>
+        <p class="headline">${words(s.headline)}</p>
         ${s.support ? `<p class="support">${escape(s.support)}</p>` : ''}
       </div>
-      ${frame(screens[''], s.show)}
+      ${frame(screens[''], s.show || s.visual)}
     </div>`,
   template: (s, screens) => `
     <p class="pill">Free download</p>
     <div class="content stack" style="gap:64px;${screens[''] ? 'height:945px' : ''}">
       <div class="stack" style="gap:24px;width:100%">
         <p class="support">${escape(s.type)} template</p>
-        <p class="title">${escape(s.name)}</p>
+        <p class="title">${words(s.name)}</p>
       </div>
-      ${frame(screens[''], s.show)}
+      ${frame(screens[''], s.show || s.visual)}
     </div>`,
 };
 
@@ -219,13 +257,13 @@ const ICONS = {
   tick: `<svg class="icon" width="88" height="88" viewBox="0 0 88 88"><rect width="88" height="88" rx="44" fill="#475636"/><path d="M67.45 30.23 37.37 60.45a1.88 1.88 0 0 1-2.66 0L21.55 47.22a1.89 1.89 0 0 1 2.66-2.67l11.83 11.89 28.75-28.89a1.88 1.88 0 0 1 2.66 2.68z" fill="#fff"/></svg>`,
 };
 
-/** A screenshot frame for this PNG (zoomed in if `show` picked one part), or nothing without one. */
-function frame(png, show) {
+/** A screenshot frame for this PNG (zoomed in if it's one part: a `show` or a `visual`), or nothing without one. */
+function frame(png, zoomed) {
   if (!png) return '';
   // A zoomed part fills the frame's width but is never shown bigger than its own pixels, so a small one stays sharp
   // (the width is in the PNG header). A part taller than the frame shows its top, which is where the heading is.
-  const size = show ? `max-width:min(100%,${png.readUInt32BE(16)}px)` : '';
-  return `<div class="frame${show ? ' zoom' : ''}"><img src="data:image/png;base64,${png.toString('base64')}" style="${size}" alt=""></div>`;
+  const size = zoomed ? `max-width:min(100%,${png.readUInt32BE(16)}px)` : '';
+  return `<div class="frame${zoomed ? ' zoom' : ''}"><img src="data:image/png;base64,${png.toString('base64')}" style="${size}" alt=""></div>`;
 }
 
 /** The card as a self-contained HTML page. `screens` holds a PNG for each screen the card shows, by field prefix ('' for one screen). */
@@ -272,23 +310,20 @@ html, body { width: ${WIDTH}px; height: ${HEIGHT}px; overflow: hidden; }
 .side-name { font-size: 56px; line-height: 1.05; }
 .left .side-name { color: #475636; }
 .side-text { font-weight: 400; font-size: 30px; line-height: 1.28; }
-.side .frame { flex: none !important; height: 300px; border-radius: 10px; border: none; box-shadow: none; }
-.side .frame.zoom { padding: 16px 16px 0; }
-.side .frame.zoom::after { height: 32px; }
+.frame.picture { flex: none !important; padding: 20px; border: none; border-radius: 10px; box-shadow: none; background: #efe9dd; }
+.right .frame.picture { background: rgba(255, 255, 255, 0.1); }
 .pair:not(.with-screens) { gap: 120px; }
 .pair:not(.with-screens) .side { padding: 40px; }
 .pair:not(.with-screens) .side-name { font-size: 64px; }
 .pair:not(.with-screens) .side-text { font-size: 36px; }
-.right .frame { background: #5c6b4a; }
 .or { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 96px; height: 96px; border-radius: 50%; background: #fff; border: 2px solid #e5ddd0; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16); display: flex; align-items: center; justify-content: center; font-size: 44px; line-height: 1; padding-bottom: 6px; color: #13110c; }
-.with-screens .or { top: 182px; }
 .pill { position: absolute; right: 64px; top: 64px; background: #475636; color: #fff; padding: 12px 28px; border-radius: 9999px; font-weight: 500; font-size: 32px; line-height: 1.4; white-space: nowrap; }
 .frame { flex: 1 0 0 !important; min-height: 1px; width: 100%; background: #f2ede4; border: 2px solid #e5ddd0; border-radius: 16px; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16); overflow: hidden; }
 .frame img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
 .frame.zoom { position: relative; background: #faf7f2; padding: 40px 40px 0; display: flex; flex-direction: column; align-items: center; justify-content: safe center; }
 .frame.zoom img { flex: none; width: 100%; height: auto; }
+.frame.picture img { width: 100%; height: 100%; object-fit: contain; }
 .frame.zoom::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: linear-gradient(rgba(250, 247, 242, 0), #faf7f2); }
-.right .frame.zoom::after { background: none; }
 </style></head><body>
 <div class="card">
   <p class="logo serif">tilia</p>
@@ -412,23 +447,42 @@ const findBox = (show) => `(() => {
   return { x: r.left + scrollX - 2, y: r.top + scrollY - 2, width: r.width + 4, height: r.height + 4 };
 })()`;
 
+// Runs in the page: a method page's picture (a figure.methodVisual), by its place on the page, as a clip rectangle.
+// Only the picture's card, on a see-through page: the figure's backdrop changes colour from one section to the next
+// and would show at the card's rounded corners. The margin keeps the card's shadow.
+const findPicture = (index) => `(() => {
+  const card = document.querySelectorAll('figure.methodVisual')[${index}]?.firstElementChild;
+  if (!card) return null;
+  for (let n = card.parentElement; n; n = n.parentElement) n.style.setProperty('background', 'transparent', 'important');
+  card.scrollIntoView({ block: 'center' });
+  const r = card.getBoundingClientRect();
+  if (!r.width || !r.height) return null;
+  return { x: r.left + scrollX - 8, y: r.top + scrollY - 6, width: r.width + 16, height: r.height + 16 };
+})()`;
+
 // Narrow enough that the app's text is large once the part is scaled to fill the frame.
 const ZOOM_WIDTH = 520;
 
-/** A PNG of the boxed part of a page that holds the text `show`, rendered at a narrow width and triple resolution. */
-async function screenshotPart(url, show, { dir }) {
+/**
+ * A PNG of one part of a page, rendered at a narrow width and triple resolution: the box holding the text `show`,
+ * or the method page picture at `picture` (its place on the page).
+ */
+async function screenshotPart(url, { show, picture }, { dir }) {
+  const expression = show ? findBox(show) : findPicture(picture);
   return withChromePage(async (send) => {
-    await send('Emulation.setDeviceMetricsOverride', { width: ZOOM_WIDTH, height: 1000, deviceScaleFactor: 3, mobile: false });
+    // A method page picture is captured a little narrower: it's shown in a compare card's half-width side.
+    await send('Emulation.setDeviceMetricsOverride', { width: show ? ZOOM_WIDTH : 420, height: 1000, deviceScaleFactor: 3, mobile: false });
+    if (!show) await send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
     await send('Page.navigate', { url });
     let clip = null;
     for (let i = 0; i < 40 && !clip; i++) {
       await delay(500);
-      clip = (await send('Runtime.evaluate', { expression: findBox(show), returnByValue: true })).result.value;
+      clip = (await send('Runtime.evaluate', { expression, returnByValue: true })).result.value;
     }
-    assert(clip, `Couldn't find "${show}" on ${url}`);
+    assert(clip, show ? `Couldn't find "${show}" on ${url}` : `${url} has no picture ${picture + 1}`);
     // Let charts finish animating, then measure again in case the layout moved.
     await delay(1500);
-    clip = (await send('Runtime.evaluate', { expression: findBox(show), returnByValue: true })).result.value ?? clip;
+    clip = (await send('Runtime.evaluate', { expression, returnByValue: true })).result.value ?? clip;
     const { data } = await send('Page.captureScreenshot', { format: 'png', clip: { ...clip, scale: 1 }, captureBeyondViewport: true });
     return Buffer.from(data, 'base64');
   }, { dir });
@@ -440,10 +494,11 @@ export async function renderCard(spec) {
   const dir = await mkdtemp(join(tmpdir(), 'tilia-card-'));
   try {
     const screens = {};
-    for (const { prefix, report, url, show } of screensFor(spec)) {
+    for (const { prefix, report, url, show, picture } of screensFor(spec)) {
       const target = report ? await demoReportUrl(report) : url;
       // A whole page is shown from the top, cropped to the frame. A 1200px window still gets the desktop layout.
-      screens[prefix] = show ? await screenshotPart(target, show, { dir }) : await screenshotPage(target, { width: 1200, height: 900, dir });
+      const part = show || picture !== undefined;
+      screens[prefix] = part ? await screenshotPart(target, { show, picture }, { dir }) : await screenshotPage(target, { width: 1200, height: 900, dir });
     }
     const html = join(dir, 'card.html');
     await writeFile(html, await cardHtml(spec, { screens }));
