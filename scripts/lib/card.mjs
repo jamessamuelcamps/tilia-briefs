@@ -443,7 +443,7 @@ async function screenshotPage(target, { width, height, dir }) {
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Runs `fn(send)` against a page in headless Chrome, where `send(method, params)` is a DevTools Protocol call. */
-async function withChromePage(fn, { dir }) {
+export async function withChromePage(fn, { dir }) {
   // A new profile each time: a compare card captures two screens, and the first Chrome's port file would be read again.
   const profile = await mkdtemp(join(dir, 'cdp-profile-'));
   const args = ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run', '--mute-audio', `--user-data-dir=${profile}`, '--remote-debugging-port=0'];
@@ -490,7 +490,7 @@ async function withChromePage(fn, { dir }) {
 
 // Runs in the page: the box (bordered or shadowed, with rounded corners) around the element whose text, alt
 // text or aria-label is exactly `show`, scrolled into view, as a clip rectangle. Null until the page has rendered it.
-const findBox = (show) => `(() => {
+export const findBox = (show) => `(() => {
   const norm = (s) => (s ?? '').replace(/\\s+/g, ' ').trim().toLowerCase();
   const want = ${JSON.stringify(show.replace(/\s+/g, ' ').trim().toLowerCase())};
   const all = [...document.querySelectorAll('body *')];
@@ -529,7 +529,7 @@ const ZOOM_WIDTH = 520;
  * A PNG of one part of a page, rendered at a narrow width and triple resolution: the box holding the text `show`,
  * or the method page picture at `picture` (its place on the page).
  */
-async function screenshotPart(url, { show, picture }, { dir }) {
+export async function screenshotPart(url, { show, picture }, { dir }) {
   const expression = show ? findBox(show) : findPicture(picture);
   return withChromePage(async (send) => {
     // A method page picture is captured a little narrower: it's shown in a compare card's half-width side.
@@ -574,7 +574,7 @@ const treeLabels = (node) => [node.label, ...node.children.flatMap(treeLabels)];
  * A PNG of a template as a participant sees it, in tilia's preview (which saves nothing). A tree test is opened
  * along its first task's answer, so the card shows the template's own tree, not just its top level.
  */
-async function screenshotTemplate(link, { dir }) {
+export async function screenshotTemplate(link, { dir }) {
   const res = await fetch(templateRawUrl(link));
   assert(res.ok, `GitHub returned ${res.status} for ${link}`);
   const { title, type, config } = templateStudy(await res.text());
