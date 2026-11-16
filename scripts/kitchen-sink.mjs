@@ -122,7 +122,7 @@ function page(items, made) {
     ['report', 'Demo report parts', 'Zoomed-in parts of the demo studies’ shared reports. Use on a <code>headline</code> card (or <code>template</code>, though a template card should show its own template).'],
     ['visual', 'Method pictures', 'Still pictures from the method pages on tilialabs.io. Use on a <code>compare</code> card as <code>left visual:</code> and <code>right visual:</code>, or on a <code>headline</code> card as <code>visual:</code>.'],
     ['demo', 'Feature demos', 'The feature demos from the app’s Explore page, on the still frame each rests on. Use on a <code>headline</code> card as <code>demo:</code>. Features that aren’t live yet are left out.'],
-    ['app', 'App screens', 'Parts of the real app, opened as the demo account. Use on a <code>headline</code> card as <code>app:</code>. A screen that’s empty here is empty in the demo account too.'],
+    ['app', 'App screens', 'Parts of the real app, opened as the demo account. Use on a <code>headline</code> card as <code>app:</code>. The study builder’s tabs show the demo draft filled in for the picture; nothing is saved.'],
     ['template', 'Templates', 'Each template as a <code>template</code> card shows it, in tilia’s participant view. On a draft, use the link to the template’s PR branch until it’s merged.'],
   ];
   const card = (i) => `

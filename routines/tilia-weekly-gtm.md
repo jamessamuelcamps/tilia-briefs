@@ -82,7 +82,7 @@ The image/no-image comparison doesn't apply this week: give all three a card. Fr
 2. `url:` a public page on https://tilialabs.io, only when no demo report fits: a comparison page from `competitors.js`, pricing, or a feature the reports don't show (the public routes are in `tilia/client/src/entry-server.jsx`).
 
 For a post about a feature rather than a method's results, use one of these instead (each on its own, with no `show:`):
-- `app: <name>`: a part of the real app, opened as the demo account. `repository filter` (the repository with its filter open), `study composer` (describe a goal and tilia drafts the study), `study settings` (response limits, close date, response quality), `survey questions` and `screeners` (both empty in the demo account for now, so only use them if the catalogue shows questions).
+- `app: <name>`: a part of the real app, opened as the demo account. `repository filter` (the repository with its filter open), `study composer` (describe a goal and tilia drafts the study), `study settings` (response limits, close date, response quality), `survey questions` (questions before and after the task, for mixed studies) and `screeners` (questions that screen out the wrong participants).
 - `demo: <name>`: a feature demo from the app's Explore page, drawn for showing a feature at a glance: `first study`, `create with ai`, `templates`, `preview`, `study settings`, `screeners`, `prolific`, `ai synthesis`, `repository`, `shareable reports`, `workspaces`, `team`.
 
 Don't promote Prolific recruiting until `tilia/docs/roadmap.md` says a real order has been placed. Transcripts and Projects have no demo or app screen until they launch.

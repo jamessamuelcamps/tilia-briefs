@@ -82,9 +82,10 @@ export const EXPLORE_DEMOS = {
 export const APP_SCREENS = {
   'repository filter': { path: '/repository', clicks: [{ text: 'Filter' }, { text: 'information-architecture', within: 'All studies' }], from: 'Repository' },
   'study composer': { path: '/dashboard', from: 'What do you want to learn?', height: 520 },
-  'survey questions': { path: '/studies/{draft}/edit', clicks: [{ text: 'Survey questions' }], from: 'Survey questions' },
-  'study settings': { path: '/studies/{draft}/edit', clicks: [{ text: 'Settings' }], from: 'Settings' },
-  screeners: { path: '/studies/{draft}/edit', clicks: [{ text: 'Screeners' }], from: 'Screeners' },
+  // The builder's tabs, on the demo draft filled in with FILLED_DRAFT (`filled`).
+  'survey questions': { path: '/studies/{draft}/edit', clicks: [{ text: 'Survey questions' }, { text: 'Edit', first: true }], from: 'Survey questions', filled: true },
+  'study settings': { path: '/studies/{draft}/edit', clicks: [{ text: 'Settings' }], from: 'Settings', filled: true },
+  screeners: { path: '/studies/{draft}/edit', clicks: [{ text: 'Screeners' }, { text: 'Edit', first: true }], from: 'Screeners', filled: true },
 };
 // Where each card can show a screen, as the prefix of its screen fields.
 const SCREEN_SLOTS = { headline: [''], template: [''], compare: ['left ', 'right '] };
@@ -506,8 +507,10 @@ export async function withChromePage(fn, { dir }) {
     });
     let nextId = 0;
     const pending = new Map();
+    const listeners = new Map();
     ws.onmessage = ({ data }) => {
       const msg = JSON.parse(data);
+      if (msg.method) listeners.get(msg.method)?.(msg.params);
       const call = pending.get(msg.id);
       if (!call) return;
       pending.delete(msg.id);
@@ -520,6 +523,8 @@ export async function withChromePage(fn, { dir }) {
         pending.set(id, { resolve, reject });
         ws.send(JSON.stringify({ id, method, params }));
       });
+    // `send.on(event, handler)` hears a DevTools Protocol event, such as Fetch.requestPaused.
+    send.on = (method, handler) => listeners.set(method, handler);
     try {
       return await fn(send);
     } finally {
@@ -686,15 +691,19 @@ async function openAsDemo(send, path, text, { width, scale, reduced = false }) {
   throw new Error(`${SITE}${path} didn't show "${text}"`);
 }
 
-/** Presses the last button-like element whose text is exactly `text`, optionally inside the element holding `within`. */
-async function press(send, { text, within }) {
+/**
+ * Presses the last button-like element whose text starts with `text` (or the first, with `first`), optionally only
+ * inside the element holding `within`.
+ */
+async function press(send, { text, within, first = false }) {
   const expression = `(() => {
     const scope = ${JSON.stringify(within ?? null)};
     const inScope = (e) => !scope || [...document.querySelectorAll('body *')].some((p) => p.contains(e) && p !== e && p.textContent.includes(scope) && p.textContent.length < 2000);
     const want = ${JSON.stringify(text)};
     const all = [...document.querySelectorAll('button, a, [role=tab], [role=button]')].filter(inScope);
     // One whose text starts with it, else the smallest one that holds it (a tile with a label above its title).
-    const el = all.findLast((e) => e.textContent.trim().startsWith(want))
+    const starts = all.filter((e) => e.textContent.trim().startsWith(want));
+    const el = (${first} ? starts[0] : starts.at(-1))
       ?? all.filter((e) => e.textContent.includes(want)).sort((a, b) => a.textContent.length - b.textContent.length)[0];
     if (el) el.click();
     return !!el;
@@ -721,34 +730,101 @@ export async function screenshotDemo(name, { dir }) {
 
 /** A PNG of a part of the app, opened by its recipe in APP_SCREENS. Narrow, so the app's text reads at card size. */
 export async function screenshotApp(name, { dir }) {
-  const { path, clicks = [], from, height } = APP_SCREENS[name];
+  const { path, clicks = [], from, height, filled } = APP_SCREENS[name];
+  const cookie = (await demoLogin()).map(({ name: n, value }) => `${n}=${value}`).join('; ');
   let target = path;
+  let draftId;
   if (path.includes('{draft}')) {
-    const cookie = (await demoLogin()).map(({ name: n, value }) => `${n}=${value}`).join('; ');
     const list = await (await fetch(`${SITE}/api/studies`, { headers: { cookie } })).json();
     const draft = (Array.isArray(list) ? list : (list.studies ?? [])).find((s) => s.status === 'draft');
     assert(draft, "tilia's demo account has no draft study");
-    target = path.replace('{draft}', draft.id);
+    draftId = draft.id;
+    target = path.replace('{draft}', draftId);
   }
   return withChromePage(async (send) => {
+    if (filled) await fillDraft(send, draftId, cookie);
     await openAsDemo(send, target, clicks[0]?.text ?? from, { width: 820, scale: 2 });
     for (const click of clicks) await press(send, click);
-    // From the heading (or tab) that names this part down to the bottom of the window, across the main column.
+    // From the heading (or tab) that names this part down to the bottom of the window, across its column (not the
+    // sidebar, which also says "Repository").
     const expression = `(() => {
       window.scrollTo(0, 0);
-      // The innermost element whose whole text is the name: a heading, or a tab with an icon beside its label.
       const want = ${JSON.stringify(from)};
-      const el = [...document.querySelectorAll('body *')].find((e) => e.textContent.trim() === want && ![...e.children].some((c) => c.textContent.trim() === want));
+      const heading = [...document.querySelectorAll('h1, h2, h3')].find((h) => h.textContent.trim().startsWith(want));
+      // Otherwise the innermost element whose whole text is the name, like a tab with an icon beside its label.
+      const el = heading ?? [...document.querySelectorAll('main *, [role=tablist] *')].find((e) => e.textContent.trim() === want && ![...e.children].some((c) => c.textContent.trim() === want));
       if (!el) return null;
-      const main = (el.closest('main') ?? document.body).getBoundingClientRect();
+      let column = el;
+      while (column.parentElement && column.parentElement.getBoundingClientRect().width < innerWidth - 80) column = column.parentElement;
+      const box = column.getBoundingClientRect();
       const top = Math.max(0, el.getBoundingClientRect().top - 24);
-      return { x: main.left, y: top, width: main.width, height: ${height ?? 'innerHeight - top'} };
+      // Start just right of the sidebar (the narrow block holding "Explore tilia"), so its edge isn't in the picture.
+      const sidebar = [...document.querySelectorAll('aside, nav, div')].filter((e) => e.textContent.includes('Explore tilia') && e.getBoundingClientRect().width < 320).pop();
+      const left = Math.max(sidebar ? sidebar.getBoundingClientRect().right + 1 : 0, box.left - 24);
+      return { x: left, y: top, width: Math.min(innerWidth - left, box.right + 24 - left), height: ${height ?? 'innerHeight - top'} };
     })()`;
     const clip = (await send('Runtime.evaluate', { expression, returnByValue: true })).result.value;
     assert(clip, `Couldn't find "${from}" on ${path}`);
     const { data } = await send('Page.captureScreenshot', { format: 'png', clip: { ...clip, scale: 1 } });
     return Buffer.from(data, 'base64');
   }, { dir });
+}
+
+// What the demo draft is filled in with for the builder's screens, so they show a study being set up rather than
+// empty tabs. It only exists in the page while the card is captured: nothing is saved (see fillDraft).
+const FILLED_DRAFT = {
+  response_limit: 200,
+  config: {
+    screener_questions: [
+      { id: 'scr-1', type: 'single_select', prompt: 'How often do you use the app on your phone?', options: [
+        { id: 'scr-1a', label: 'Every day', disqualifies: false },
+        { id: 'scr-1b', label: 'A few times a week', disqualifies: false },
+        { id: 'scr-1c', label: 'Rarely', disqualifies: true },
+        { id: 'scr-1d', label: 'Never', disqualifies: true },
+      ] },
+      { id: 'scr-2', type: 'single_select', prompt: 'Do you work on a customer support team?', options: [
+        { id: 'scr-2a', label: 'Yes', disqualifies: false },
+        { id: 'scr-2b', label: 'No', disqualifies: true },
+      ] },
+    ],
+    disqualification_message: 'Thanks for your time. This study is for support teams who use the app on their phone.',
+    pre_survey: { questions: [
+      { id: 'pre-1', type: 'single_select', prompt: 'What best describes your role on the support team?', options: [
+        { id: 'pre-1a', label: 'Support agent' }, { id: 'pre-1b', label: 'Team lead' }, { id: 'pre-1c', label: 'Support manager' },
+      ] },
+    ] },
+    post_survey: { questions: [
+      { id: 'post-1', type: 'single_select', prompt: 'How easy was it to find what you were looking for?', options: [
+        { id: 'post-1a', label: 'Very easy' }, { id: 'post-1b', label: 'Easy' }, { id: 'post-1c', label: 'Difficult' }, { id: 'post-1d', label: 'Very difficult' },
+      ] },
+      { id: 'post-2', type: 'open_text', prompt: 'Was there anything you expected to find but couldn’t?' },
+    ] },
+    randomise_tasks: true,
+    prevent_resubmit: true,
+    access_password: 'support-team',
+  },
+};
+
+/**
+ * Answers the app's request for the demo draft with a filled-in copy (FILLED_DRAFT), and refuses every request that
+ * would change anything, so the builder shows a study being set up and nothing can be saved.
+ */
+async function fillDraft(send, draftId, cookie) {
+  const closesAt = new Date(Date.now() + 21 * 86400000).toISOString();
+  send.on('Fetch.requestPaused', async ({ requestId, request }) => {
+    try {
+      if (request.method !== 'GET') return await send('Fetch.failRequest', { requestId, errorReason: 'BlockedByClient' });
+      if (!new URL(request.url).pathname.endsWith(`/api/studies/${draftId}`)) return await send('Fetch.continueRequest', { requestId });
+      const body = await (await fetch(request.url, { headers: { cookie } })).json();
+      const study = body.study ?? body;
+      const filled = { ...study, response_limit: FILLED_DRAFT.response_limit, closes_at: closesAt, config: { ...study.config, ...FILLED_DRAFT.config } };
+      const json = JSON.stringify(body.study ? { ...body, study: filled } : filled);
+      await send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: [{ name: 'Content-Type', value: 'application/json' }], body: Buffer.from(json).toString('base64') });
+    } catch {
+      // The page has moved on; nothing to answer.
+    }
+  });
+  await send('Fetch.enable', { patterns: [{ urlPattern: `${SITE}/api/*`, requestStage: 'Request' }] });
 }
 
 /** Renders a card spec to PNG bytes. */
