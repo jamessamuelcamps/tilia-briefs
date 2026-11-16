@@ -1,9 +1,10 @@
 [
   {"card":"stat","stat":"73%","label":"of participants found the billing page on the first try","source":"Source: tilia tree test, 212 participants, 2026"},
-  {"card":"mistake","mistake":"Testing your navigation with labels you wrote yourself","fix":"Run an open card sort first and use the words people group by"},
+  {"card":"mistake","title":"Tree testing a navigation you guessed","mistake":"Testing your navigation with labels you wrote yourself","fix":"Run an open card sort first and use the words people group by"},
+  {"card":"headline","headline":"Your users aren’t lost. Your labels are.","support":"A tree test shows exactly where people take the wrong turn, before you ship the menu.","report":"tree test","show":"Task 3"},
+  {"card":"headline","headline":"Which cards people put together","report":"card sort","show":"Cluster dendrogram"},
   {"card":"headline","headline":"Your users aren’t lost. Your labels are.","support":"A tree test shows exactly where people take the wrong turn, before you ship the menu."},
   {"card":"compare","headline":"Open or closed card sort?","left":"Open sort","left text":"People create and name the groups. Use it when you have no structure yet.","right":"Closed sort","right text":"You set the groups and people sort into them. Use it to check the one you have."},
-  {"card":"template","type":"Tree test","name":"SaaS settings navigation"},
-  {"card":"screenshot","caption":"Every first click, mapped in one view","url":"https://tilialabs.io/"},
-  {"card":"screenshot","caption":"Where people went wrong, and why","report":"tree test","show":"Task 3"}
+  {"card":"compare","headline":"Tree test or card sort?","left":"Card sort","left text":"Learn how people group things, before you have a menu.","left report":"card sort","left show":"Cluster dendrogram","right":"Tree test","right text":"Check people can find things in the menu you have.","right report":"tree test","right show":"Task 1"},
+  {"card":"template","type":"Tree test","name":"SaaS settings navigation","report":"tree test","show":"Task 1"}
 ]

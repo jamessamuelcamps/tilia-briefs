@@ -20,18 +20,26 @@ const ROOT = new URL('../../cards/', import.meta.url);
 const WIDTH = 1080;
 const HEIGHT = 1350;
 
+// A screen from the app or site, for the cards with a screenshot frame. `report` (a method) shows the shared results
+// report of that study in tilia's demo account; `url` shows a page on tilialabs.io. `show` zooms in on the boxed part
+// of the page holding that exact text, such as a heading. All optional: without a screen, the card is text only.
+const screenFields = (prefix = '') => ({
+  [`${prefix}report`]: { max: 20, optional: true },
+  [`${prefix}url`]: { max: 300, optional: true },
+  [`${prefix}show`]: { max: 80, optional: true },
+});
+
 // Each card's fields, named after the Figma text layers, with the most characters that fit the layout.
 export const CARDS = {
   stat: { stat: 6, label: 80, source: { max: 60, optional: true } },
-  mistake: { mistake: 80, fix: 80 },
-  headline: { headline: 50, support: { max: 110, optional: true } },
-  // Two options side by side under a headline, e.g. open vs closed card sort. Not in the Figma file yet; styled like the mistake card.
-  compare: { headline: 50, left: 20, 'left text': 90, right: 20, 'right text': 90 },
-  template: { type: 20, name: 40, github: { max: 30, optional: true } },
-  // `report` (a method) shows the shared results report of that study in tilia's demo account; `url` shows any page.
-  // `show` zooms in on the boxed part of the page holding that exact text, such as a heading.
-  screenshot: { caption: 40, url: { max: 300, optional: true }, report: { max: 20, optional: true }, show: { max: 80, optional: true } },
+  mistake: { title: 50, mistake: 80, fix: 80 },
+  headline: { headline: 50, support: { max: 110, optional: true }, ...screenFields() },
+  // Two options side by side under a question, e.g. open vs closed card sort, each with its own screen or neither.
+  compare: { headline: 50, left: 20, 'left text': 90, right: 20, 'right text': 90, ...screenFields('left '), ...screenFields('right ') },
+  template: { type: 20, name: 40, ...screenFields() },
 };
+// Where each card can show a screen, as the prefix of its screen fields.
+const SCREEN_SLOTS = { headline: [''], template: [''], compare: ['left ', 'right '] };
 const SCREENSHOT_HOSTS = ['tilialabs.io', 'www.tilialabs.io'];
 const SITE = 'https://tilialabs.io';
 
@@ -125,22 +133,40 @@ export function validateSpec(spec) {
   }
   const unknown = Object.keys(spec).filter((k) => k !== 'card' && !(k in fields));
   assert(!unknown.length, `A ${card} card doesn't use ${unknown.map((k) => `"${k}"`).join(', ')}; it takes ${Object.keys(fields).join(', ')}`);
-  if (card === 'screenshot') {
-    assert(!out.url !== !out.report, 'A screenshot card needs one of "url:" (a page on tilialabs.io) or "report:" (a demo study), not both');
-    if (out.report) {
-      out.report = out.report.toLowerCase();
-      assert(out.report in DEMO_REPORTS, `"report: ${out.report}" isn't a demo study; use ${Object.keys(DEMO_REPORTS).join(', ')}`);
-      return out;
-    }
-    let url;
-    try {
-      url = new URL(out.url);
-    } catch {
-      throw new Error(`"${out.url}" isn't a URL`);
-    }
-    assert(url.protocol === 'https:' && SCREENSHOT_HOSTS.includes(url.hostname), 'Screenshot cards only show pages on https://tilialabs.io');
-  }
+  const slots = SCREEN_SLOTS[card] ?? [];
+  const withScreen = slots.filter((prefix) => validateScreen(out, prefix));
+  assert(withScreen.length === 0 || withScreen.length === slots.length, `A ${card} card needs a screen on both sides or neither`);
   return out;
+}
+
+/** Checks one screen's fields in place (lower-casing `report`). True if the card shows a screen there. */
+function validateScreen(out, prefix) {
+  const [report, url, show] = ['report', 'url', 'show'].map((k) => `${prefix}${k}`);
+  assert(!(out[url] && out[report]), `Use "${url}:" (a page on tilialabs.io) or "${report}:" (a demo study), not both`);
+  if (!out[url] && !out[report]) {
+    assert(!out[show], `"${show}:" needs a "${report}:" or "${url}:" line to zoom in on`);
+    return false;
+  }
+  if (out[report]) {
+    out[report] = out[report].toLowerCase();
+    assert(out[report] in DEMO_REPORTS, `"${report}: ${out[report]}" isn't a demo study; use ${Object.keys(DEMO_REPORTS).join(', ')}`);
+    return true;
+  }
+  let parsed;
+  try {
+    parsed = new URL(out[url]);
+  } catch {
+    throw new Error(`"${out[url]}" isn't a URL`);
+  }
+  assert(parsed.protocol === 'https:' && SCREENSHOT_HOSTS.includes(parsed.hostname), 'Screens can only show pages on https://tilialabs.io');
+  return true;
+}
+
+/** The screens a spec asks for: the field prefix, and the report method or URL, plus the text to zoom in on. */
+function screensFor(spec) {
+  return (SCREEN_SLOTS[spec.card] ?? [])
+    .filter((prefix) => spec[`${prefix}report`] || spec[`${prefix}url`])
+    .map((prefix) => ({ prefix, report: spec[`${prefix}report`], url: spec[`${prefix}url`], show: spec[`${prefix}show`] }));
 }
 
 const escape = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -154,46 +180,60 @@ const BODIES = {
       ${s.source ? `<p class="source">${escape(s.source)}</p>` : ''}
     </div>`,
   mistake: (s) => `
-    <div class="content stack" style="gap:24px">
-      <div class="block mistake"><p class="block-heading">The mistake</p><p class="block-text">${escape(s.mistake)}</p></div>
-      <div class="block fix"><p class="block-heading">The fix</p><p class="block-text">${escape(s.fix)}</p></div>
+    <div class="content stack" style="gap:48px">
+      <p class="title">${escape(s.title)}</p>
+      <div class="block mistake">${ICONS.cross}<div class="stack" style="gap:32px"><p class="block-heading">The mistake</p><p class="block-text">${escape(s.mistake)}</p></div></div>
+      <div class="block fix">${ICONS.tick}<div class="stack" style="gap:32px"><p class="block-heading">The fix</p><p class="block-text">${escape(s.fix)}</p></div></div>
     </div>`,
-  compare: (s) => `
-    <div class="content stack" style="gap:64px">
-      <p class="headline" style="text-wrap:balance">${escape(s.headline)}</p>
-      <div class="pair">
-        <div class="block side"><p class="block-heading">${escape(s.left)}</p><p class="block-text">${escape(s['left text'])}</p></div>
-        <div class="block side"><p class="block-heading">${escape(s.right)}</p><p class="block-text">${escape(s['right text'])}</p></div>
+  compare: (s, screens) => `
+    <div class="content stack" style="gap:56px">
+      <p class="headline">${escape(s.headline)}</p>
+      <div class="pair${screens['left '] ? ' with-screens' : ''}">
+        <div class="side left">${frame(screens['left '], s['left show'])}<p class="side-name">${escape(s.left)}</p><p class="side-text">${escape(s['left text'])}</p></div>
+        <div class="side right">${frame(screens['right '], s['right show'])}<p class="side-name">${escape(s.right)}</p><p class="side-text">${escape(s['right text'])}</p></div>
+        <p class="or">or</p>
       </div>
     </div>`,
-  headline: (s) => `
-    <div class="content stack" style="gap:48px">
-      <p class="headline">${escape(s.headline)}</p>
-      ${s.support ? `<p class="support">${escape(s.support)}</p>` : ''}
+  headline: (s, screens) => `
+    <div class="content stack" style="gap:64px;${screens[''] ? 'height:953px' : ''}">
+      <div class="stack" style="gap:24px;width:100%">
+        <p class="headline">${escape(s.headline)}</p>
+        ${s.support ? `<p class="support">${escape(s.support)}</p>` : ''}
+      </div>
+      ${frame(screens[''], s.show)}
     </div>`,
-  template: (s, a) => `
-    <div class="content stack" style="gap:40px">
-      <p class="pill">${escape(s.type)}</p>
-      <p class="name">${escape(s.name)}</p>
-      <div class="github"><span class="icon"><img src="${a.github}" width="32.0187" height="35.3333" alt=""></span><p>${escape(s.github ?? 'Free on GitHub')}</p></div>
-    </div>`,
-  screenshot: (s, a) => `
-    <div class="content stack" style="top:200px;height:993px;gap:48px">
-      <p class="caption">${escape(s.caption)}</p>
-      <div class="frame${s.show ? ' zoom' : ''}"><img src="${a.screenshot}" style="${a.screenshotSize}" alt=""></div>
+  template: (s, screens) => `
+    <p class="pill">Free download</p>
+    <div class="content stack" style="gap:64px;${screens[''] ? 'height:945px' : ''}">
+      <div class="stack" style="gap:24px;width:100%">
+        <p class="support">${escape(s.type)} template</p>
+        <p class="title">${escape(s.name)}</p>
+      </div>
+      ${frame(screens[''], s.show)}
     </div>`,
 };
 
-/** The card as a self-contained HTML page. `screenshot` is a PNG of the page, for screenshot cards. */
-export async function cardHtml(spec, { screenshot } = {}) {
+// The cross and tick from the Figma mistake card.
+const ICONS = {
+  cross: `<svg class="icon" width="88" height="88" viewBox="0 0 88 88"><rect width="88" height="88" rx="44" fill="#7D4220"/><path d="M63.43 60.67a1.95 1.95 0 0 1-2.76 2.76L44.5 47.26 28.33 63.43a1.95 1.95 0 0 1-2.76-2.76L41.74 44.5 25.57 28.33a1.95 1.95 0 0 1 2.76-2.76L44.5 41.74l16.17-16.17a1.95 1.95 0 0 1 2.76 2.76L47.26 44.5z" fill="#fff"/></svg>`,
+  tick: `<svg class="icon" width="88" height="88" viewBox="0 0 88 88"><rect width="88" height="88" rx="44" fill="#475636"/><path d="M67.45 30.23 37.37 60.45a1.88 1.88 0 0 1-2.66 0L21.55 47.22a1.89 1.89 0 0 1 2.66-2.67l11.83 11.89 28.75-28.89a1.88 1.88 0 0 1 2.66 2.68z" fill="#fff"/></svg>`,
+};
+
+/** A screenshot frame for this PNG (zoomed in if `show` picked one part), or nothing without one. */
+function frame(png, show) {
+  if (!png) return '';
+  // A zoomed part fills the frame's width but is never shown bigger than its own pixels, so a small one stays sharp
+  // (the width is in the PNG header). A part taller than the frame shows its top, which is where the heading is.
+  const size = show ? `max-width:min(100%,${png.readUInt32BE(16)}px)` : '';
+  return `<div class="frame${show ? ' zoom' : ''}"><img src="data:image/png;base64,${png.toString('base64')}" style="${size}" alt=""></div>`;
+}
+
+/** The card as a self-contained HTML page. `screens` holds a PNG for each screen the card shows, by field prefix ('' for one screen). */
+export async function cardHtml(spec, { screens = {} } = {}) {
   const assets = {
     background: await dataUri('assets/background.jpg', 'image/jpeg'),
-    github: await dataUri('assets/github.svg', 'image/svg+xml'),
     fraunces: await dataUri('fonts/Fraunces.ttf', 'font/ttf'),
     bricolage: await dataUri('fonts/BricolageGrotesque.ttf', 'font/ttf'),
-    screenshot: screenshot ? `data:image/png;base64,${screenshot.toString('base64')}` : '',
-    // A zoomed part is never shown bigger than its own pixels, so a small one stays sharp. (Width and height are in the PNG header.)
-    screenshotSize: screenshot ? `max-width:min(100%,${screenshot.readUInt32BE(16)}px);max-height:min(100%,${screenshot.readUInt32BE(20)}px)` : '',
   };
   return `<!doctype html>
 <html><head><meta charset="utf-8"><style>
@@ -203,43 +243,56 @@ export async function cardHtml(spec, { screenshot } = {}) {
 html, body { width: ${WIDTH}px; height: ${HEIGHT}px; overflow: hidden; }
 .card { position: relative; width: ${WIDTH}px; height: ${HEIGHT}px; background: #fff url(${assets.background}) 0 0 / ${WIDTH}px ${HEIGHT}px no-repeat; overflow: hidden; overflow-wrap: break-word; }
 .serif { font-family: Fraunces; font-variation-settings: "SOFT" 0, "WONK" 1; }
-.sans, .label, .source, .support, .block-heading, .block-text, .pill, .github p, .url { font-family: Bricolage; font-variation-settings: "opsz" 14, "wdth" 100; }
+.serif, .stat, .headline, .title, .block-heading, .side-name, .or { font-family: Fraunces; font-variation-settings: "SOFT" 0, "WONK" 1; font-weight: 600; }
+.label, .source, .support, .block-text, .side-text, .pill, .url { font-family: Bricolage; font-variation-settings: "opsz" 14, "wdth" 100; }
 .logo { position: absolute; left: 64px; top: 64px; font-weight: 600; font-size: 70.405px; line-height: 1; letter-spacing: -1.4081px; color: #13110c; }
 .content { position: absolute; left: 64px; top: 232px; width: 952px; }
 .stack { display: flex; flex-direction: column; align-items: flex-start; }
 .stack > * { flex-shrink: 0; }
 .url { position: absolute; left: 64px; top: 1241px; font-weight: 500; font-size: 32px; line-height: 1.4; color: #faf7f2; white-space: nowrap; }
-.stat { font-family: Fraunces; font-variation-settings: "SOFT" 0, "WONK" 1; font-weight: 600; font-size: 280px; line-height: 1; letter-spacing: -11.2px; color: #384329; width: 100%; }
+.stat { font-size: 280px; line-height: 1; letter-spacing: -11.2px; color: #384329; width: 100%; }
 .label { font-weight: 500; font-size: 48px; line-height: 1.35; letter-spacing: -0.48px; color: #13110c; width: 100%; }
 .source { font-weight: 400; font-size: 32px; line-height: 1.4; color: #5f5949; width: 100%; }
-.block { display: flex; gap: 16px; align-items: flex-start; width: 100%; padding: 48px; border: 1px solid; border-radius: 16px; }
+.headline { font-size: 104px; line-height: 1.05; color: #13110c; width: 100%; text-wrap: balance; }
+.title { font-size: 64px; line-height: 1.05; color: #13110c; width: 100%; text-wrap: balance; }
+.support { font-weight: 400; font-size: 40px; line-height: 1.35; color: #5f5949; width: 100%; }
+.block { display: flex; gap: 48px; align-items: center; width: 100%; padding: 48px; border: 1px solid; border-radius: 16px; }
+.block > .stack { flex: 1 0 0; min-width: 1px; }
+.block .icon { flex: none; display: block; }
 .block.mistake { background: #faf7f2; border-color: #7d4220; }
 .block.fix { background: #f1f3ec; border-color: #384329; }
-.block-heading { flex: 0 0 200px; height: 40px; display: flex; align-items: center; font-weight: 600; font-size: 24px; line-height: 1.4; letter-spacing: 1.2px; text-transform: uppercase; }
+.block-heading { font-size: 48px; line-height: 1.05; }
 .mistake .block-heading { color: #7d4220; }
 .fix .block-heading { color: #475636; }
-.block-text { flex: 1 0 0; min-width: 1px; font-weight: 400; font-size: 32px; line-height: 1.15; color: #13110c; }
-.pair { display: flex; gap: 24px; width: 100%; align-items: stretch; }
-.block.side { flex: 1 0 0; min-width: 1px; flex-direction: column; gap: 24px; padding: 40px; background: #faf7f2; border-color: #475636; }
-.side .block-heading { flex: none; height: auto; color: #475636; }
-.side .block-text { flex: none; font-size: 36px; line-height: 1.3; }
-.headline { font-family: Fraunces; font-variation-settings: "SOFT" 0, "WONK" 1; font-weight: 600; font-size: 104px; line-height: 1.05; color: #13110c; width: 100%; }
-.support { font-weight: 400; font-size: 40px; line-height: 1.35; color: #5f5949; width: 100%; }
-.pill { background: #475636; color: #fff; padding: 12px 28px; border-radius: 9999px; font-weight: 500; font-size: 32px; line-height: 1.4; white-space: nowrap; }
-.name { font-family: Fraunces; font-variation-settings: "SOFT" 0, "WONK" 1; font-weight: 600; font-size: 112px; line-height: 1.05; color: #13110c; width: 100%; }
-.github { display: flex; gap: 16px; align-items: center; }
-.github .icon { position: relative; width: 40px; height: 40px; flex: none; overflow: hidden; }
-.github .icon img { position: absolute; left: 2.33px; top: 2.33px; display: block; }
-.github p { font-weight: 600; font-size: 36px; line-height: 1.4; color: #384329; white-space: nowrap; }
-.caption { font-family: Fraunces; font-variation-settings: "SOFT" 0, "WONK" 1; font-weight: 400; font-size: 48px; line-height: 1.15; letter-spacing: -0.48px; color: #13110c; width: 100%; }
+.block-text { font-weight: 400; font-size: 32px; line-height: 1.25; color: #13110c; width: 100%; }
+.pair { position: relative; display: flex; gap: 24px; width: 100%; }
+.side { flex: 1 0 0; min-width: 1px; display: flex; flex-direction: column; gap: 24px; padding: 32px; border: 1px solid; border-radius: 16px; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16); }
+.side.left { background: #faf7f2; border-color: #e5ddd0; color: #13110c; }
+.side.right { background: #475636; border-color: #384329; color: #faf7f2; }
+.side-name { font-size: 56px; line-height: 1.05; }
+.left .side-name { color: #475636; }
+.side-text { font-weight: 400; font-size: 30px; line-height: 1.28; }
+.side .frame { flex: none !important; height: 300px; border-radius: 10px; border: none; box-shadow: none; }
+.side .frame.zoom { padding: 16px 16px 0; }
+.side .frame.zoom::after { height: 32px; }
+.pair:not(.with-screens) { gap: 120px; }
+.pair:not(.with-screens) .side { padding: 40px; }
+.pair:not(.with-screens) .side-name { font-size: 64px; }
+.pair:not(.with-screens) .side-text { font-size: 36px; }
+.right .frame { background: #5c6b4a; }
+.or { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 96px; height: 96px; border-radius: 50%; background: #fff; border: 2px solid #e5ddd0; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16); display: flex; align-items: center; justify-content: center; font-size: 44px; line-height: 1; padding-bottom: 6px; color: #13110c; }
+.with-screens .or { top: 182px; }
+.pill { position: absolute; right: 64px; top: 64px; background: #475636; color: #fff; padding: 12px 28px; border-radius: 9999px; font-weight: 500; font-size: 32px; line-height: 1.4; white-space: nowrap; }
 .frame { flex: 1 0 0 !important; min-height: 1px; width: 100%; background: #f2ede4; border: 2px solid #e5ddd0; border-radius: 16px; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16); overflow: hidden; }
 .frame img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
-.frame.zoom { background: #faf7f2; padding: 40px; display: flex; align-items: center; justify-content: center; }
-.frame.zoom img { width: auto; height: auto; object-fit: contain; }
+.frame.zoom { position: relative; background: #faf7f2; padding: 40px 40px 0; display: flex; flex-direction: column; align-items: center; justify-content: safe center; }
+.frame.zoom img { flex: none; width: 100%; height: auto; }
+.frame.zoom::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: linear-gradient(rgba(250, 247, 242, 0), #faf7f2); }
+.right .frame.zoom::after { background: none; }
 </style></head><body>
 <div class="card">
   <p class="logo serif">tilia</p>
-  ${BODIES[spec.card](spec, assets)}
+  ${BODIES[spec.card](spec, screens)}
   <p class="url">tilialabs.io</p>
 </div>
 </body></html>`;
@@ -294,7 +347,8 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Runs `fn(send)` against a page in headless Chrome, where `send(method, params)` is a DevTools Protocol call. */
 async function withChromePage(fn, { dir }) {
-  const profile = join(dir, 'cdp-profile');
+  // A new profile each time: a compare card captures two screens, and the first Chrome's port file would be read again.
+  const profile = await mkdtemp(join(dir, 'cdp-profile-'));
   const args = ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run', '--mute-audio', `--user-data-dir=${profile}`, '--remote-debugging-port=0'];
   const chrome = spawn(findChrome(), [...args, ...(process.env.CI ? ['--no-sandbox'] : []), 'about:blank'], { stdio: 'ignore' });
   try {
@@ -385,14 +439,14 @@ export async function renderCard(spec) {
   assert(spec.card in CARDS, `"${spec.card}" can't be rendered`);
   const dir = await mkdtemp(join(tmpdir(), 'tilia-card-'));
   try {
-    let screenshot;
-    if (spec.card === 'screenshot') {
-      const target = spec.report ? await demoReportUrl(spec.report) : spec.url;
-      // The frame is 948 x 886 inside its border. A 1200px window still gets the desktop layout, with text big enough to read.
-      screenshot = spec.show ? await screenshotPart(target, spec.show, { dir }) : await screenshotPage(target, { width: 1200, height: 1122, dir });
+    const screens = {};
+    for (const { prefix, report, url, show } of screensFor(spec)) {
+      const target = report ? await demoReportUrl(report) : url;
+      // A whole page is shown from the top, cropped to the frame. A 1200px window still gets the desktop layout.
+      screens[prefix] = show ? await screenshotPart(target, show, { dir }) : await screenshotPage(target, { width: 1200, height: 900, dir });
     }
     const html = join(dir, 'card.html');
-    await writeFile(html, await cardHtml(spec, { screenshot }));
+    await writeFile(html, await cardHtml(spec, { screens }));
     return await screenshotPage(pathToFileURL(html).href, { width: WIDTH, height: HEIGHT, dir });
   } finally {
     await rm(dir, { recursive: true, force: true }).catch(() => {});

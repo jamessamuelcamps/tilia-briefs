@@ -28,8 +28,8 @@ test('the image section is everything between the "Image" heading and the next d
 });
 
 test('a spec in one block with line breaks reads the same', () => {
-  const section = imageSection(page(block('code', 'card: mistake\nmistake: Labels you wrote\nfix: Card sort first')));
-  assert.deepEqual(parseSpec(section.lines), { card: 'mistake', mistake: 'Labels you wrote', fix: 'Card sort first' });
+  const section = imageSection(page(block('code', 'card: mistake\ntitle: Guessed labels\nmistake: Labels you wrote\nfix: Card sort first')));
+  assert.deepEqual(parseSpec(section.lines), { card: 'mistake', title: 'Guessed labels', mistake: 'Labels you wrote', fix: 'Card sort first' });
 });
 
 test('the draft stops before the image section even without a divider', () => {
@@ -40,11 +40,10 @@ test('the draft stops before the image section even without a divider', () => {
 test('every card type validates with its required fields', () => {
   const examples = {
     stat: { stat: '73%', label: 'found it first time' },
-    mistake: { mistake: 'a', fix: 'b' },
+    mistake: { title: 't', mistake: 'a', fix: 'b' },
     headline: { headline: 'Labels, not users' },
     compare: { headline: 'Open or closed?', left: 'Open', 'left text': 'a', right: 'Closed', 'right text': 'b' },
     template: { type: 'Tree test', name: 'SaaS settings' },
-    screenshot: { caption: 'Every first click', url: 'https://tilialabs.io/pricing' },
   };
   assert.deepEqual(Object.keys(examples), Object.keys(CARDS));
   for (const [card, fields] of Object.entries(examples)) assert.deepEqual(validateSpec({ card, ...fields }), { card, ...fields });
@@ -56,27 +55,38 @@ test('a wrong spec is refused with a reason', () => {
   assert.throws(() => parseSpec(['card: carousel']), /isn't a card/);
   assert.throws(() => parseSpec(['card: stat', 'label: x']), /needs a "stat:" line/);
   assert.throws(() => parseSpec(['card: stat', 'stat: 1,234,567', 'label: x']), /"stat" is 9 characters/);
-  assert.throws(() => parseSpec(['card: mistake', 'mistake: a', 'fix: b', 'colour: red']), /doesn't use "colour"/);
+  assert.throws(() => parseSpec(['card: mistake', 'title: t', 'mistake: a', 'fix: b', 'colour: red']), /doesn't use "colour"/);
   assert.throws(() => parseSpec(['card: headline', 'just some text']), /isn't a "key: value" line/);
-  assert.throws(() => validateSpec({ card: 'screenshot', caption: 'x', url: 'https://example.com' }), /only show pages on https:\/\/tilialabs.io/);
-  assert.throws(() => validateSpec({ card: 'screenshot', caption: 'x', url: 'tilialabs.io' }), /isn't a URL/);
-  assert.throws(() => validateSpec({ card: 'screenshot', caption: 'x' }), /needs one of "url:"/);
-  assert.throws(() => validateSpec({ card: 'screenshot', caption: 'x', url: 'https://tilialabs.io/', report: 'card sort' }), /not both/);
-  assert.throws(() => validateSpec({ card: 'screenshot', caption: 'x', report: 'interviews' }), /isn't a demo study/);
+  assert.throws(() => validateSpec({ card: 'headline', headline: 'x', url: 'https://example.com' }), /only show pages on https:\/\/tilialabs.io/);
+  assert.throws(() => validateSpec({ card: 'headline', headline: 'x', url: 'tilialabs.io' }), /isn't a URL/);
+  assert.throws(() => validateSpec({ card: 'headline', headline: 'x', show: 'Task 3' }), /needs a "report:" or "url:"/);
+  assert.throws(() => validateSpec({ card: 'template', type: 'x', name: 'y', url: 'https://tilialabs.io/', report: 'card sort' }), /not both/);
+  assert.throws(() => validateSpec({ card: 'headline', headline: 'x', report: 'interviews' }), /isn't a demo study/);
+  assert.throws(() => validateSpec({ card: 'screenshot', caption: 'x', report: 'card sort' }), /isn't a card/);
 });
 
-test('a screenshot card can show a demo study report instead of a page', () => {
-  assert.deepEqual(validateSpec({ card: 'screenshot', caption: 'x', report: 'Card sort' }), { card: 'screenshot', caption: 'x', report: 'card sort' });
-  assert.deepEqual(validateSpec({ card: 'screenshot', caption: 'x', report: 'tree test', show: 'Task 3' }), { card: 'screenshot', caption: 'x', report: 'tree test', show: 'Task 3' });
+const compare = { card: 'compare', headline: 'Open or closed?', left: 'Open', 'left text': 'a', right: 'Closed', 'right text': 'b' };
+
+test('headline, template and compare cards can show demo study reports', () => {
+  assert.deepEqual(validateSpec({ card: 'headline', headline: 'x', report: 'Card sort' }), { card: 'headline', headline: 'x', report: 'card sort' });
+  const template = { card: 'template', type: 'Tree test', name: 'y', report: 'tree test', show: 'Task 1' };
+  assert.deepEqual(validateSpec(template), template);
+  const both = { ...compare, 'left report': 'Card sort', 'left show': 'Cluster dendrogram', 'right report': 'tree test' };
+  assert.deepEqual(validateSpec(both), { ...both, 'left report': 'card sort' });
 });
 
-test('a zoomed screenshot is never shown bigger than its own pixels', async () => {
+test('a compare card has a screen on both sides or neither', () => {
+  assert.throws(() => validateSpec({ ...compare, 'left report': 'card sort' }), /both sides or neither/);
+});
+
+test('a zoomed screen is never shown bigger than its own pixels', async () => {
   const png = Buffer.alloc(24);
   png.writeUInt32BE(744, 16);
   png.writeUInt32BE(570, 20);
-  const html = await cardHtml({ card: 'screenshot', caption: 'x', report: 'tree test', show: 'Task 3' }, { screenshot: png });
+  const html = await cardHtml({ card: 'headline', headline: 'x', report: 'tree test', show: 'Task 3' }, { screens: { '': png } });
   assert.match(html, /class="frame zoom"/);
-  assert.match(html, /max-width:min\(100%,744px\);max-height:min\(100%,570px\)/);
+  assert.match(html, /max-width:min\(100%,744px\)/);
+  assert.doesNotMatch(await cardHtml({ card: 'headline', headline: 'x' }), /class="frame/);
 });
 
 test('card text is escaped', async () => {
