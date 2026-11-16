@@ -5,7 +5,7 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { DEMO_REPORTS, METHOD_VISUALS, demoReportUrl, findBox, screenshotPart, screenshotTemplate, withChromePage } from './lib/card.mjs';
+import { APP_SCREENS, DEMO_REPORTS, EXPLORE_DEMOS, METHOD_VISUALS, demoReportUrl, findBox, screenshotApp, screenshotDemo, screenshotPart, screenshotTemplate, withChromePage } from './lib/card.mjs';
 
 const OUT = 'cards/out/kitchen-sink';
 const SITE = 'https://tilialabs.io';
@@ -89,6 +89,18 @@ try {
     }
     console.log(`${method}: ${pictures.length} pictures`);
   }
+  for (const name of Object.keys(EXPLORE_DEMOS)) {
+    const file = `demo-${slug(name)}.png`;
+    await writeFile(join(OUT, file), await screenshotDemo(name, { dir }));
+    items.push({ kind: 'demo', group: 'feature demos', lines: [`demo: ${name}`], file });
+    console.log(`demo: ${name}`);
+  }
+  for (const name of Object.keys(APP_SCREENS)) {
+    const file = `app-${slug(name)}.png`;
+    await writeFile(join(OUT, file), await screenshotApp(name, { dir }));
+    items.push({ kind: 'app', group: 'app screens', lines: [`app: ${name}`], file });
+    console.log(`app: ${name}`);
+  }
   for (const link of await templateLinks()) {
     const name = link.split('/').pop().replace('.md', '');
     const file = `template-${name}.png`;
@@ -109,6 +121,8 @@ function page(items, made) {
   const SECTIONS = [
     ['report', 'Demo report parts', 'Zoomed-in parts of the demo studies’ shared reports. Use on a <code>headline</code> card (or <code>template</code>, though a template card should show its own template).'],
     ['visual', 'Method pictures', 'Still pictures from the method pages on tilialabs.io. Use on a <code>compare</code> card as <code>left visual:</code> and <code>right visual:</code>, or on a <code>headline</code> card as <code>visual:</code>.'],
+    ['demo', 'Feature demos', 'The feature demos from the app’s Explore page, on the still frame each rests on. Use on a <code>headline</code> card as <code>demo:</code>. Features that aren’t live yet are left out.'],
+    ['app', 'App screens', 'Parts of the real app, opened as the demo account. Use on a <code>headline</code> card as <code>app:</code>. A screen that’s empty here is empty in the demo account too.'],
     ['template', 'Templates', 'Each template as a <code>template</code> card shows it, in tilia’s participant view. On a draft, use the link to the template’s PR branch until it’s merged.'],
   ];
   const card = (i) => `

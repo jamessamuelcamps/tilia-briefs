@@ -149,3 +149,11 @@ test('a card sort template is open unless it lists categories', () => {
   assert.equal(closed.config.variant, 'closed');
   assert.deepEqual(closed.config.categories.map((c) => c.label), ['People and HR', 'Money']);
 });
+
+test('a headline card can show a feature demo or an app screen, by name', () => {
+  assert.deepEqual(validateSpec({ card: 'headline', headline: 'x', demo: 'Prolific' }), { card: 'headline', headline: 'x', demo: 'prolific' });
+  assert.deepEqual(validateSpec({ card: 'headline', headline: 'x', app: 'Repository  filter' }), { card: 'headline', headline: 'x', app: 'repository filter' });
+  assert.throws(() => validateSpec({ card: 'headline', headline: 'x', demo: 'transcripts' }), /isn't a feature demo/);
+  assert.throws(() => validateSpec({ card: 'headline', headline: 'x', app: 'billing' }), /isn't an? app screen/);
+  assert.throws(() => validateSpec({ card: 'headline', headline: 'x', demo: 'team', report: 'tree test' }), /on its own/);
+});

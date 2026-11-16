@@ -81,6 +81,12 @@ The image/no-image comparison doesn't apply this week: give all three a card. Fr
 1. `report: <method>`: the shared results report of that method's study in tilia's demo account (seeded by `tilia/server/scripts/seed-demo.js`, with made-up data), e.g. the card sort's dendrogram, or the tree test's success rates and paths. The methods are `tree test`, `card sort`, `first-click`, `survey` and `preference test`.
 2. `url:` a public page on https://tilialabs.io, only when no demo report fits: a comparison page from `competitors.js`, pricing, or a feature the reports don't show (the public routes are in `tilia/client/src/entry-server.jsx`).
 
+For a post about a feature rather than a method's results, use one of these instead (each on its own, with no `show:`):
+- `app: <name>`: a part of the real app, opened as the demo account. `repository filter` (the repository with its filter open), `study composer` (describe a goal and tilia drafts the study), `study settings` (response limits, close date, response quality), `survey questions` and `screeners` (both empty in the demo account for now, so only use them if the catalogue shows questions).
+- `demo: <name>`: a feature demo from the app's Explore page, drawn for showing a feature at a glance: `first study`, `create with ai`, `templates`, `preview`, `study settings`, `screeners`, `prolific`, `ai synthesis`, `repository`, `shareable reports`, `workspaces`, `team`.
+
+Don't promote Prolific recruiting until `tilia/docs/roadmap.md` says a real order has been placed. Transcripts and Projects have no demo or app screen until they launch.
+
 **Always add `show:`** to zoom in on one part of the screen. A whole report or page is too small to read on LinkedIn. `show:` is the exact text of a heading or label on the page, and the card shows the box around it, as wide as the frame; a tall part is cut off at the bottom, so the heading and the top of it must make the point. These work well:
 - `tree test`: `Task 1`, `Task 2` or `Task 3` (the question, then the success split and success rate), or a theme title from the summary, e.g. `Docs vs Support confusion`.
 - `card sort`: `Cluster dendrogram` (which cards people grouped together). Avoid `Similarity matrix`, which is cut off at this size.
@@ -97,7 +103,7 @@ The watcher turns it into a 1080 x 1350 image on the page within half an hour, s
 
 | card | fields (characters) |
 | --- | --- |
-| `headline` | `headline` (50, the point in a few words), `support` (110, optional), and a screen: `report` or `url`, plus `show` (80); or a `visual` as for `compare` |
+| `headline` | `headline` (50, the point in a few words), `support` (110, optional), and a screen: `report` or `url`, plus `show` (80); or a `visual` as for `compare`, a `demo` or an `app` (see above) |
 | `compare` | `headline` (50, the question the post answers), `left` (20), `left text` (90, what it is and when to use it), `right` (20), `right text` (90), and optionally `left visual` and `right visual` (e.g. `card sort task`, `tree test task`) |
 | `mistake` | `title` (50, what the post is about, e.g. `Tree testing a navigation you guessed`), `mistake` (80), `fix` (80) |
 | `template` | `type` (20, the method, e.g. `Tree test`), `name` (40), and `template` (the template's GitHub link): the card shows the template itself in tilia's participant view, never an unrelated demo study. Tree tests and card sorts only; leave it out for other methods |

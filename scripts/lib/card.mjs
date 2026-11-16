@@ -23,12 +23,15 @@ const HEIGHT = 1350;
 // A screen from the app or site, for the cards with a screenshot frame. `report` (a method) shows the shared results
 // report of that study in tilia's demo account; `url` shows a page on tilialabs.io. `show` zooms in on the boxed part
 // of the page holding that exact text, such as a heading. `visual` is one of the still pictures on a method page
-// (see METHOD_VISUALS). All optional: without a screen, the card is text only.
+// (see METHOD_VISUALS), `demo` one of the feature demos on the Explore page (EXPLORE_DEMOS), and `app` a part of the
+// app opened by a short recipe (APP_SCREENS). All optional: without a screen, the card is text only.
 const screenFields = (prefix = '') => ({
   [`${prefix}report`]: { max: 20, optional: true },
   [`${prefix}url`]: { max: 300, optional: true },
   [`${prefix}show`]: { max: 80, optional: true },
   [`${prefix}visual`]: { max: 30, optional: true },
+  [`${prefix}demo`]: { max: 30, optional: true },
+  [`${prefix}app`]: { max: 30, optional: true },
 });
 
 // Each card's fields, named after the Figma text layers, with the most characters that fit the layout.
@@ -54,6 +57,35 @@ export const METHOD_VISUALS = {
   survey: { path: '/survey', pictures: ['task', 'results'] },
 };
 const VISUAL_NAMES = Object.entries(METHOD_VISUALS).flatMap(([method, { pictures }]) => pictures.map((p) => `${method} ${p}`));
+
+// The feature demos on the app's Explore page (tilia/client/src/components/explore/features.js), by the title on
+// each tile. They're drawn from the app's own pieces and hold still on a chosen frame under reduced motion. Leave a
+// feature out here until it's live for Free or Pro users (Transcripts and Projects are admin-only until launch).
+export const EXPLORE_DEMOS = {
+  'first study': 'Your first study',
+  'create with ai': 'Create with AI',
+  templates: 'Templates',
+  preview: 'Preview',
+  'study settings': 'Study settings',
+  screeners: 'Screeners',
+  prolific: 'Recruit on Prolific',
+  'ai synthesis': 'AI synthesis',
+  repository: 'Repository',
+  'shareable reports': 'Shareable reports',
+  workspaces: 'Workspaces',
+  team: 'Team',
+};
+
+// Parts of the real app, opened as the read-only demo user: a page, the buttons to press (text, optionally only
+// inside the element that also holds `within`), and the text whose section to show (`from`, to the bottom of the
+// window). `{draft}` is the demo account's draft study.
+export const APP_SCREENS = {
+  'repository filter': { path: '/repository', clicks: [{ text: 'Filter' }, { text: 'information-architecture', within: 'All studies' }], from: 'Repository' },
+  'study composer': { path: '/dashboard', from: 'What do you want to learn?', height: 520 },
+  'survey questions': { path: '/studies/{draft}/edit', clicks: [{ text: 'Survey questions' }], from: 'Survey questions' },
+  'study settings': { path: '/studies/{draft}/edit', clicks: [{ text: 'Settings' }], from: 'Settings' },
+  screeners: { path: '/studies/{draft}/edit', clicks: [{ text: 'Screeners' }], from: 'Screeners' },
+};
 // Where each card can show a screen, as the prefix of its screen fields.
 const SCREEN_SLOTS = { headline: [''], template: [''], compare: ['left ', 'right '] };
 const SCREENSHOT_HOSTS = ['tilialabs.io', 'www.tilialabs.io'];
@@ -166,7 +198,15 @@ export function validateSpec(spec) {
 
 /** Checks one screen's fields in place (lower-casing `report` and `visual`). True if the card shows a screen there. */
 function validateScreen(out, prefix) {
-  const [report, url, show, visual, template] = ['report', 'url', 'show', 'visual', 'template'].map((k) => `${prefix}${k}`);
+  const [report, url, show, visual, template, demo, app] = ['report', 'url', 'show', 'visual', 'template', 'demo', 'app'].map((k) => `${prefix}${k}`);
+  for (const [field, names, what] of [[demo, EXPLORE_DEMOS, 'feature demo'], [app, APP_SCREENS, 'app screen']]) {
+    if (!out[field]) continue;
+    const others = [report, url, show, visual, template, demo, app].filter((k) => k !== field && out[k]);
+    assert(!others.length, `Use "${field}:" on its own, without ${others.map((k) => `"${k}:"`).join(' or ')}`);
+    out[field] = out[field].toLowerCase().replace(/\s+/g, ' ');
+    assert(out[field] in names, `"${field}: ${out[field]}" isn't a ${what}; use ${Object.keys(names).join(', ')}`);
+    return true;
+  }
   if (out[template]) {
     assert(!out[url] && !out[report] && !out[show] && !out[visual], `Use "${template}:" on its own, without another screen`);
     assert(templateRawUrl(out[template]), `"${template}:" must be a template's link, like ${TEMPLATE_BLOB}main/templates/tree-tests/banking-app.md`);
@@ -248,6 +288,8 @@ export function templateStudy(markdown) {
 function screensFor(spec) {
   return (SCREEN_SLOTS[spec.card] ?? []).flatMap((prefix) => {
     if (spec[`${prefix}template`]) return [{ prefix, template: spec[`${prefix}template`] }];
+    if (spec[`${prefix}demo`]) return [{ prefix, demo: spec[`${prefix}demo`] }];
+    if (spec[`${prefix}app`]) return [{ prefix, app: spec[`${prefix}app`] }];
     const visual = spec[`${prefix}visual`];
     if (visual) {
       const [, method, picture] = visual.match(/^(.+) (\w+)$/);
@@ -300,7 +342,7 @@ const BODIES = {
         <p class="headline">${words(s.headline)}</p>
         ${s.support ? `<p class="support">${escape(s.support)}</p>` : ''}
       </div>
-      ${frame(screens[''], s.show || s.visual)}
+      ${frame(screens[''], s.show || s.visual || s.demo || s.app)}
     </div>`,
   template: (s, screens) => `
     <p class="pill">Free download</p>
@@ -309,7 +351,7 @@ const BODIES = {
         <p class="support">${escape(s.type)} template</p>
         <p class="title">${words(s.name)}</p>
       </div>
-      ${frame(screens[''], s.show || s.visual || s.template)}
+      ${frame(screens[''], s.show || s.visual || s.template || s.demo || s.app)}
     </div>`,
 };
 
@@ -618,15 +660,106 @@ export async function screenshotTemplate(link, { dir }) {
   }, { dir });
 }
 
+// Runs in the page: hides the demo account's banner and preview's banner, which aren't part of the product.
+const HIDE_BANNERS = `(() => {
+  for (const text of ['exploring tilia in demo mode', "Responses won't be recorded"]) {
+    let n = [...document.querySelectorAll('body *')].findLast((e) => e.textContent.includes(text));
+    while (n && n.parentElement && n.parentElement.textContent.trim().length < 160) n = n.parentElement;
+    if (n) n.style.display = 'none';
+  }
+})()`;
+
+/** Opens a page in the app as the read-only demo user, and waits until it shows `text`. */
+async function openAsDemo(send, path, text, { width, scale, reduced = false }) {
+  await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: scale, mobile: false });
+  if (reduced) await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  for (const cookie of await demoLogin()) await send('Network.setCookie', { ...cookie, url: SITE });
+  await send('Page.navigate', { url: `${SITE}${path}` });
+  for (let i = 0; i < 40; i++) {
+    await delay(500);
+    if ((await send('Runtime.evaluate', { expression: `document.body.innerText.includes(${JSON.stringify(text)})`, returnByValue: true })).result.value) {
+      await delay(1000);
+      await send('Runtime.evaluate', { expression: HIDE_BANNERS });
+      return;
+    }
+  }
+  throw new Error(`${SITE}${path} didn't show "${text}"`);
+}
+
+/** Presses the last button-like element whose text is exactly `text`, optionally inside the element holding `within`. */
+async function press(send, { text, within }) {
+  const expression = `(() => {
+    const scope = ${JSON.stringify(within ?? null)};
+    const inScope = (e) => !scope || [...document.querySelectorAll('body *')].some((p) => p.contains(e) && p !== e && p.textContent.includes(scope) && p.textContent.length < 2000);
+    const want = ${JSON.stringify(text)};
+    const all = [...document.querySelectorAll('button, a, [role=tab], [role=button]')].filter(inScope);
+    // One whose text starts with it, else the smallest one that holds it (a tile with a label above its title).
+    const el = all.findLast((e) => e.textContent.trim().startsWith(want))
+      ?? all.filter((e) => e.textContent.includes(want)).sort((a, b) => a.textContent.length - b.textContent.length)[0];
+    if (el) el.click();
+    return !!el;
+  })()`;
+  assert((await send('Runtime.evaluate', { expression, returnByValue: true })).result.value, `Couldn't find "${text}" to press`);
+  await delay(1200);
+}
+
+/** A PNG of a feature demo from the Explore page, on the still frame it rests on under reduced motion. */
+export async function screenshotDemo(name, { dir }) {
+  const title = EXPLORE_DEMOS[name];
+  return withChromePage(async (send) => {
+    await openAsDemo(send, '/explore', title, { width: 1200, scale: 3, reduced: true });
+    await press(send, { text: title });
+    await delay(1000);
+    // The demo's stage is the labelled picture in the dialog that opened, which comes last in the page.
+    const expression = `(() => { const s = [...document.querySelectorAll('[role=img][aria-label]')].at(-1); if (!s) return null; const r = s.getBoundingClientRect(); return { x: r.left + scrollX, y: r.top + scrollY, width: r.width, height: r.height }; })()`;
+    const clip = (await send('Runtime.evaluate', { expression, returnByValue: true })).result.value;
+    assert(clip, `The ${title} demo didn't open`);
+    const { data } = await send('Page.captureScreenshot', { format: 'png', clip: { ...clip, scale: 1 }, captureBeyondViewport: true });
+    return Buffer.from(data, 'base64');
+  }, { dir });
+}
+
+/** A PNG of a part of the app, opened by its recipe in APP_SCREENS. Narrow, so the app's text reads at card size. */
+export async function screenshotApp(name, { dir }) {
+  const { path, clicks = [], from, height } = APP_SCREENS[name];
+  let target = path;
+  if (path.includes('{draft}')) {
+    const cookie = (await demoLogin()).map(({ name: n, value }) => `${n}=${value}`).join('; ');
+    const list = await (await fetch(`${SITE}/api/studies`, { headers: { cookie } })).json();
+    const draft = (Array.isArray(list) ? list : (list.studies ?? [])).find((s) => s.status === 'draft');
+    assert(draft, "tilia's demo account has no draft study");
+    target = path.replace('{draft}', draft.id);
+  }
+  return withChromePage(async (send) => {
+    await openAsDemo(send, target, clicks[0]?.text ?? from, { width: 820, scale: 2 });
+    for (const click of clicks) await press(send, click);
+    // From the heading (or tab) that names this part down to the bottom of the window, across the main column.
+    const expression = `(() => {
+      window.scrollTo(0, 0);
+      // The innermost element whose whole text is the name: a heading, or a tab with an icon beside its label.
+      const want = ${JSON.stringify(from)};
+      const el = [...document.querySelectorAll('body *')].find((e) => e.textContent.trim() === want && ![...e.children].some((c) => c.textContent.trim() === want));
+      if (!el) return null;
+      const main = (el.closest('main') ?? document.body).getBoundingClientRect();
+      const top = Math.max(0, el.getBoundingClientRect().top - 24);
+      return { x: main.left, y: top, width: main.width, height: ${height ?? 'innerHeight - top'} };
+    })()`;
+    const clip = (await send('Runtime.evaluate', { expression, returnByValue: true })).result.value;
+    assert(clip, `Couldn't find "${from}" on ${path}`);
+    const { data } = await send('Page.captureScreenshot', { format: 'png', clip: { ...clip, scale: 1 } });
+    return Buffer.from(data, 'base64');
+  }, { dir });
+}
+
 /** Renders a card spec to PNG bytes. */
 export async function renderCard(spec) {
   assert(spec.card in CARDS, `"${spec.card}" can't be rendered`);
   const dir = await mkdtemp(join(tmpdir(), 'tilia-card-'));
   try {
     const screens = {};
-    for (const { prefix, report, url, show, picture, template } of screensFor(spec)) {
-      if (template) {
-        screens[prefix] = await screenshotTemplate(template, { dir });
+    for (const { prefix, report, url, show, picture, template, demo, app } of screensFor(spec)) {
+      if (template || demo || app) {
+        screens[prefix] = template ? await screenshotTemplate(template, { dir }) : demo ? await screenshotDemo(demo, { dir }) : await screenshotApp(app, { dir });
         continue;
       }
       const target = report ? await demoReportUrl(report) : url;
