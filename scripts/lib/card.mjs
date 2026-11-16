@@ -39,7 +39,8 @@ export const CARDS = {
   // Two options side by side under a question, e.g. tree test or card sort. The sides are small, so each shows one
   // piece of the tool (a method page's picture), not a page: a visual on both sides or neither.
   compare: { headline: 50, left: 20, 'left text': 90, right: 20, 'right text': 90, 'left visual': { max: 30, optional: true }, 'right visual': { max: 30, optional: true } },
-  template: { type: 20, name: 40, ...screenFields() },
+  // `template` is the template's GitHub link: the card shows it in tilia's participant view (see templateStudy).
+  template: { type: 20, name: 40, template: { max: 300, optional: true }, ...screenFields() },
 };
 
 // The still pictures on tilialabs.io's method pages (tilia/client/src/components/methods/MethodVisuals.jsx), in the
@@ -73,9 +74,7 @@ export const DEMO_REPORTS = {
  */
 export async function demoReportUrl(method) {
   const type = DEMO_REPORTS[method];
-  const login = await fetch(`${SITE}/api/auth/demo`, { redirect: 'manual' });
-  const cookie = login.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
-  assert(cookie, `Couldn't log in to tilia's demo account (${login.status})`);
+  const cookie = (await demoLogin()).map(({ name, value }) => `${name}=${value}`).join('; ');
   const get = async (path) => {
     const res = await fetch(`${SITE}${path}`, { headers: { cookie } });
     assert(res.ok, `tilia's demo account returned ${res.status} for ${path}`);
@@ -91,6 +90,17 @@ export async function demoReportUrl(method) {
     if (token) return `${SITE}/r/${token}`;
   }
   throw new Error(`The demo ${method} study has no shared report`);
+}
+
+/** The session cookies of tilia's read-only demo user, as { name, value }. */
+async function demoLogin() {
+  const login = await fetch(`${SITE}/api/auth/demo`, { redirect: 'manual' });
+  const cookies = login.headers.getSetCookie().map((c) => {
+    const [name, ...value] = c.split(';')[0].split('=');
+    return { name, value: value.join('=') };
+  });
+  assert(cookies.length, `Couldn't log in to tilia's demo account (${login.status})`);
+  return cookies;
 }
 
 const plain = (richText) => richText.map((t) => t.plain_text).join('');
@@ -156,7 +166,12 @@ export function validateSpec(spec) {
 
 /** Checks one screen's fields in place (lower-casing `report` and `visual`). True if the card shows a screen there. */
 function validateScreen(out, prefix) {
-  const [report, url, show, visual] = ['report', 'url', 'show', 'visual'].map((k) => `${prefix}${k}`);
+  const [report, url, show, visual, template] = ['report', 'url', 'show', 'visual', 'template'].map((k) => `${prefix}${k}`);
+  if (out[template]) {
+    assert(!out[url] && !out[report] && !out[show] && !out[visual], `Use "${template}:" on its own, without another screen`);
+    assert(templateRawUrl(out[template]), `"${template}:" must be a template's link, like ${TEMPLATE_BLOB}main/templates/tree-tests/banking-app.md`);
+    return true;
+  }
   if (out[visual]) {
     assert(!out[url] && !out[report] && !out[show], `Use "${visual}:" on its own, without "${report}:", "${url}:" or "${show}:"`);
     out[visual] = out[visual].toLowerCase().replace(/\s+/g, ' ');
@@ -183,9 +198,56 @@ function validateScreen(out, prefix) {
   return true;
 }
 
+// Templates live in a public GitHub repo. A link names a branch, so a template still in its PR can be shown.
+const TEMPLATE_BLOB = 'https://github.com/tilia-labs/ux-research-templates/blob/';
+
+/** The raw file for a template's GitHub link, or null if it isn't one. */
+export function templateRawUrl(link) {
+  const match = link.match(/^https:\/\/github\.com\/tilia-labs\/ux-research-templates\/blob\/([\w./-]+?)\/(templates\/[\w/-]+\.md)$/);
+  return match && `https://raw.githubusercontent.com/tilia-labs/ux-research-templates/${match[1]}/${match[2]}`;
+}
+
+/**
+ * A study for tilia's preview from a template's markdown (docs/markdown-format.md in the templates repo), read
+ * the way tilia's importer reads it (tilia/client/src/utils/parseIAMarkdown.js). A tree test has "The tree" and
+ * "Tasks" with each task's correct answers; a card sort has "The cards", and a closed sort also has its categories.
+ */
+export function templateStudy(markdown) {
+  const section = (heading) => markdown.split(/^## /m).find((s) => s.startsWith(heading))?.slice(heading.length) ?? '';
+  const bullets = (text) => text.split('\n').filter((l) => /^\s*[-*]\s+\S/.test(l));
+  const title = markdown.match(/^# (.+)$/m)?.[1].trim() ?? 'Template';
+  const treeLines = bullets(section('The tree'));
+  if (treeLines.length) {
+    const root = { label: '', children: [] };
+    const stack = [{ node: root, indent: -1 }];
+    for (const line of treeLines) {
+      const indent = line.search(/\S/);
+      const node = { label: line.replace(/^\s*[-*]\s*/, '').trim(), children: [] };
+      while (stack.length > 1 && stack.at(-1).indent >= indent) stack.pop();
+      stack.at(-1).node.children.push(node);
+      stack.push({ node, indent });
+    }
+    const tree = root.children.length === 1 ? root.children[0] : { label: 'Home', children: root.children };
+    const tasks = [...section('Tasks').matchAll(/^\d+\.\s+(.+)\n\s+Correct answers?:\s*(.+)$/gm)].map(([, question, answers], i) => ({
+      id: `task-${i + 1}`,
+      question: question.trim(),
+      correct_answers: answers.split(/,\s*or\s+/).map((path) => path.split('›').map((label) => label.trim())),
+    }));
+    assert(tasks.length, `The template "${title}" has no tasks with correct answers`);
+    return { title, type: 'treejack', config: { tree, tasks } };
+  }
+  const label = (l) => l.replace(/^\s*[-*]\s*/, '').trim();
+  const cards = bullets(section('The cards')).map((l, i) => ({ id: `c${i + 1}`, label: label(l) }));
+  assert(cards.length, `The template "${title}" has neither a tree nor cards`);
+  // A closed sort's categories are a numbered list.
+  const categories = [...section('Categories').matchAll(/^\s*\d+\.\s+(.+)$/gm)].map(([, l], i) => ({ id: `g${i + 1}`, label: l.trim() }));
+  return { title, type: 'card_sort', config: { cards, categories, variant: categories.length ? 'closed' : 'open' } };
+}
+
 /** The screens a spec asks for: the field prefix, and the report method or URL, plus the text or picture to zoom in on. */
 function screensFor(spec) {
   return (SCREEN_SLOTS[spec.card] ?? []).flatMap((prefix) => {
+    if (spec[`${prefix}template`]) return [{ prefix, template: spec[`${prefix}template`] }];
     const visual = spec[`${prefix}visual`];
     if (visual) {
       const [, method, picture] = visual.match(/^(.+) (\w+)$/);
@@ -247,7 +309,7 @@ const BODIES = {
         <p class="support">${escape(s.type)} template</p>
         <p class="title">${words(s.name)}</p>
       </div>
-      ${frame(screens[''], s.show || s.visual)}
+      ${frame(screens[''], s.show || s.visual || s.template)}
     </div>`,
 };
 
@@ -488,13 +550,85 @@ async function screenshotPart(url, { show, picture }, { dir }) {
   }, { dir });
 }
 
+// Runs in the page: the participant view's content, without the preview banner, as a clip rectangle: only the
+// rows holding `labels` (a tree test's tree) if given, otherwise everything. Null until it has rendered.
+const findExercise = (labels) => `(() => {
+  const only = ${JSON.stringify(labels ?? null)};
+  const banner = [...document.querySelectorAll('body *')].findLast((e) => e.textContent.includes("Responses won't be recorded"));
+  let n = banner;
+  while (n && n.parentElement && n.parentElement.textContent.trim().length < 160) n = n.parentElement;
+  if (n) n.style.display = 'none';
+  const rects = [...document.querySelectorAll('body *')]
+    .filter((e) => only ? e.children.length === 0 && only.includes(e.textContent.trim()) : (e.children.length === 0 && e.textContent.trim()) || e.tagName === 'BUTTON')
+    .map((e) => (only ? e.closest('button, [role=treeitem], li') ?? e.parentElement : e).getBoundingClientRect())
+    .filter((r) => r.width && r.height);
+  if (rects.length < 3) return null;
+  const top = Math.min(...rects.map((r) => r.top)) - 24;
+  const bottom = Math.max(...rects.map((r) => r.bottom)) + 24;
+  return { x: 0, y: Math.max(0, top + scrollY), width: document.documentElement.clientWidth, height: bottom - Math.max(0, top) };
+})()`;
+
+const treeLabels = (node) => [node.label, ...node.children.flatMap(treeLabels)];
+
+/**
+ * A PNG of a template as a participant sees it, in tilia's preview (which saves nothing). A tree test is opened
+ * along its first task's answer, so the card shows the template's own tree, not just its top level.
+ */
+async function screenshotTemplate(link, { dir }) {
+  const res = await fetch(templateRawUrl(link));
+  assert(res.ok, `GitHub returned ${res.status} for ${link}`);
+  const { title, type, config } = templateStudy(await res.text());
+  const study = { id: 'template-preview', title, type, config: { ...config, randomise_cards: false } };
+  const path = type === 'treejack' ? config.tasks[0].correct_answers[0] : [];
+  const cookies = await demoLogin();
+  return withChromePage(async (send) => {
+    // Wider than other parts, so a whole tree opened at one branch fits the template card's frame.
+    await send('Emulation.setDeviceMetricsOverride', { width: 640, height: 1200, deviceScaleFactor: 3, mobile: false });
+    // Preview needs someone signed in: the read-only demo user.
+    for (const cookie of cookies) await send('Network.setCookie', { ...cookie, url: SITE });
+    // Preview reads the study from localStorage on tilia's own origin.
+    await send('Page.navigate', { url: `${SITE}/about` });
+    await delay(2000);
+    const value = JSON.stringify({ studyId: study.id, study });
+    await send('Runtime.evaluate', { expression: `localStorage.setItem('tilia_preview_study', ${JSON.stringify(value)})` });
+    await send('Page.navigate', { url: `${SITE}/preview/exercise` });
+    // Wait for the tree's first branch or the first card.
+    const first = JSON.stringify(path[0] ?? config.cards[0].label);
+    let ready = false;
+    for (let i = 0; i < 40 && !ready; i++) {
+      await delay(500);
+      ready = (await send('Runtime.evaluate', { expression: `document.body.innerText.includes(${first})`, returnByValue: true })).result.value;
+    }
+    if (!ready) {
+      const text = (await send('Runtime.evaluate', { expression: 'document.body.innerText.slice(0, 200)', returnByValue: true })).result.value;
+      throw new Error(`The preview of ${title} didn't show ${first}; it shows: ${text}`);
+    }
+    for (const label of path) {
+      const expression = `(() => { const el = [...document.querySelectorAll('body *')].findLast((e) => e.children.length === 0 && e.textContent.trim() === ${JSON.stringify(label)}); if (el) el.click(); return !!el; })()`;
+      assert((await send('Runtime.evaluate', { expression, returnByValue: true })).result.value, `The preview of ${title} has no "${label}" in its tree`);
+      await delay(400);
+    }
+    await delay(800);
+    // A tree test shows only its tree: the post already asks the task's question.
+    const labels = type === 'treejack' ? treeLabels(config.tree) : null;
+    const clip = (await send('Runtime.evaluate', { expression: findExercise(labels), returnByValue: true })).result.value;
+    assert(clip, `The preview of ${title} didn't load`);
+    const { data } = await send('Page.captureScreenshot', { format: 'png', clip: { ...clip, scale: 1 }, captureBeyondViewport: true });
+    return Buffer.from(data, 'base64');
+  }, { dir });
+}
+
 /** Renders a card spec to PNG bytes. */
 export async function renderCard(spec) {
   assert(spec.card in CARDS, `"${spec.card}" can't be rendered`);
   const dir = await mkdtemp(join(tmpdir(), 'tilia-card-'));
   try {
     const screens = {};
-    for (const { prefix, report, url, show, picture } of screensFor(spec)) {
+    for (const { prefix, report, url, show, picture, template } of screensFor(spec)) {
+      if (template) {
+        screens[prefix] = await screenshotTemplate(template, { dir });
+        continue;
+      }
       const target = report ? await demoReportUrl(report) : url;
       // A whole page is shown from the top, cropped to the frame. A 1200px window still gets the desktop layout.
       const part = show || picture !== undefined;

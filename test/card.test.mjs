@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { CARDS, FAILED_NOTE, cardHtml, imageSection, parseSpec, validateSpec } from '../scripts/lib/card.mjs';
+import { CARDS, FAILED_NOTE, cardHtml, imageSection, parseSpec, templateRawUrl, templateStudy, validateSpec } from '../scripts/lib/card.mjs';
 import { draftText, imagePlan } from '../scripts/lib/gtm.mjs';
 
 const span = (plain_text) => ({ plain_text, annotations: {}, href: null });
@@ -121,4 +121,31 @@ test('the image plan: none, render, an existing image, or a failed card', () => 
   assert.equal(failed.action, 'failed');
 
   assert.throws(() => imagePlan(page(block('paragraph', 'card: stat'))), /needs a "stat:" line/);
+});
+
+test('a template card can show the template itself, from its GitHub link', () => {
+  const link = 'https://github.com/tilia-labs/ux-research-templates/blob/feat/template-banking/templates/tree-tests/banking-app.md';
+  assert.equal(templateRawUrl(link), 'https://raw.githubusercontent.com/tilia-labs/ux-research-templates/feat/template-banking/templates/tree-tests/banking-app.md');
+  assert.equal(templateRawUrl('https://github.com/someone/else/blob/main/templates/x.md'), null);
+  const spec = { card: 'template', type: 'Tree test', name: 'Banking app', template: link };
+  assert.deepEqual(validateSpec(spec), spec);
+  assert.throws(() => validateSpec({ ...spec, template: 'https://example.com/x.md' }), /must be a template's link/);
+  assert.throws(() => validateSpec({ ...spec, report: 'tree test' }), /on its own/);
+});
+
+test('a tree test template is read like tilia imports it, with its tasks', () => {
+  const md = `# Banking app tree test\n\n## The tree\n\n- Home\n  - Cards\n    - Freeze card\n  - Profile\n    - Documents\n\n## Tasks\n\n1. You want to stop anyone using your card. Where would you go?\n   Correct answer: Cards › Freeze card\n2. Where's a statement?\n   Correct answers: Cards › Freeze card, or Profile › Documents\n`;
+  const study = templateStudy(md);
+  assert.equal(study.type, 'treejack');
+  assert.deepEqual(study.config.tree.children.map((c) => c.label), ['Cards', 'Profile']);
+  assert.deepEqual(study.config.tasks[0].correct_answers, [['Cards', 'Freeze card']]);
+  assert.deepEqual(study.config.tasks[1].correct_answers, [['Cards', 'Freeze card'], ['Profile', 'Documents']]);
+});
+
+test('a card sort template is open unless it lists categories', () => {
+  const cards = `# Intranet\n\n## The cards\n\n- Payslips\n- Sick leave\n`;
+  assert.deepEqual(templateStudy(cards).config, { cards: [{ id: 'c1', label: 'Payslips' }, { id: 'c2', label: 'Sick leave' }], categories: [], variant: 'open' });
+  const closed = templateStudy(`${cards}\n## Categories to add in tilia\n\n1. People and HR\n2. Money\n`);
+  assert.equal(closed.config.variant, 'closed');
+  assert.deepEqual(closed.config.categories.map((c) => c.label), ['People and HR', 'Money']);
 });

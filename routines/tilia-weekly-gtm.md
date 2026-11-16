@@ -100,7 +100,7 @@ The watcher turns it into a 1080 x 1350 image on the page within half an hour, s
 | `headline` | `headline` (50, the point in a few words), `support` (110, optional), and a screen: `report` or `url`, plus `show` (80); or a `visual` as for `compare` |
 | `compare` | `headline` (50, the question the post answers), `left` (20), `left text` (90, what it is and when to use it), `right` (20), `right text` (90), and optionally `left visual` and `right visual` (e.g. `card sort task`, `tree test task`) |
 | `mistake` | `title` (50, what the post is about, e.g. `Tree testing a navigation you guessed`), `mistake` (80), `fix` (80) |
-| `template` | `type` (20, the method, e.g. `Tree test`), `name` (40), and optionally a screen as for `headline` |
+| `template` | `type` (20, the method, e.g. `Tree test`), `name` (40), and `template` (the template's GitHub link): the card shows the template itself in tilia's participant view, never an unrelated demo study. Tree tests and card sorts only; leave it out for other methods |
 | `stat` | `stat` (6), `label` (80), `source` (60, optional): put only the number in `stat` (`£49`, `6`, `73%`) and the words in `label`; from the product's own files or a cited source |
 | `none` | a post that works better as text |
 

@@ -40,7 +40,7 @@ In "Tilia GTM" (`collection://d3104d2a-56d7-4ead-b25c-96feaa91ab98`; fetch it fi
   - `card: template`
   - `type: <the method, 20 characters at most, e.g. Tree test>`
   - `name: <the template name, 40 characters at most>`
-  - `report: <the method in lower case: tree test, card sort, first-click, survey or preference test>` and `show: Task 1` for a tree test, `Cluster dendrogram` for a card sort, or `Click heatmap` for first-click: the demo study's results, to show what running the template gets you. Leave both out for other methods.
+  - `template: <the template's GitHub link on your branch, https://github.com/tilia-labs/ux-research-templates/blob/feat/template-<slug>/templates/...>`: the card shows the template itself in tilia's participant view (a tree test's own tree, opened at its first task's answer, or a card sort's cards). Use the branch, not `main`: the card is made before the PR is merged. Only tree tests and card sorts can be shown; leave it out for other methods.
 
 Add a page comment on the LinkedIn post row mentioning James (`user://782c3151-92a2-4129-a28f-710dc5c42ad7`), saying both PRs are ready to review, with their links.
 

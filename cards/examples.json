@@ -7,5 +7,5 @@
   {"card":"compare","headline":"Open or closed card sort?","left":"Open sort","left text":"People create and name the groups. Use it when you have no structure yet.","right":"Closed sort","right text":"You set the groups and people sort into them. Use it to check the one you have."},
   {"card":"compare","headline":"Tree test or card sort?","left":"Card sort","left text":"Learn how people group things, before you have a menu.","left visual":"card sort task","right":"Tree test","right text":"Check people can find things in the menu you have.","right visual":"tree test task"},
   {"card":"compare","headline":"First-click or five-second test?","left":"First-click","left text":"Where people click first to do a task.","left visual":"first-click task","right":"Five-second","right text":"What people remember after a quick look.","right visual":"five-second task"},
-  {"card":"template","type":"Tree test","name":"SaaS settings navigation","report":"tree test","show":"Task 1"}
+  {"card":"template","type":"Tree test","name":"Banking app","template":"https://github.com/tilia-labs/ux-research-templates/blob/main/templates/tree-tests/banking-app.md"}
 ]
